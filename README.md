@@ -184,34 +184,34 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 
 1. **Infrastructure de base**
    - [x] Mise en place des couches architecturales
-   - [ ] Création de la structure des repositories de données
+   - [x] Création de la structure des repositories de données
    - [ ] Implémentation de l'infrastructure de logging
-   - [ ] Configuration du système de tests unitaires
+   - [x] Configuration du système de tests unitaires
 
 2. **Message Bus**
-   - [ ] Conception de l'API du message bus
-   - [ ] Implémentation de la version synchrone
-   - [ ] Tests d'intégration entre deux services
+   - [x] Conception de l'API du message bus
+   - [x] Implémentation de la version synchrone
+   - [x] Tests d'intégration entre deux services
 
 3. **Agent Memory**
-   - [ ] Implémentation de l'interface d'accès mémoire
-   - [ ] Implémentation du backend Redis ou SQLite
-   - [ ] Tests des opérations CRUD
+   - [x] Implémentation de l'interface d'accès mémoire
+   - [x] Implémentation du backend Redis ou SQLite
+   - [x] Tests des opérations CRUD
 
 ### Phase 2 : GeoAgent Amélioré (Semaines 4-7)
 
 1. **Réfactoring du GeoAgent**
-   - [ ] Extraction de la logique métier vers des services de domaine
-   - [ ] Implémentation de l'interface de communication
-   - [ ] Tests unitaires des services
+   - [x] Extraction de la logique métier vers des services de domaine
+   - [x] Implémentation de l'interface de communication
+   - [x] Tests unitaires des services
 
 2. **Services Géospatiaux**
-   - [ ] Implémentation de ParcelService
+   - [x] Implémentation de ParcelService
    - [ ] Implémentation de TerrainAnalysisService
-   - [ ] Implémentation de ForestPotentialService
+   - [x] Implémentation de ForestPotentialService
 
 3. **Chargement de Données**
-   - [ ] Implémentation des loaders pour données cadastrales
+   - [x] Implémentation des loaders pour données cadastrales
    - [ ] Implémentation des loaders pour BD TOPO
    - [ ] Implémentation des loaders pour Corine Land Cover
    - [ ] Tests d'intégration avec des données réelles
@@ -219,12 +219,12 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 4. **Délivrables Phase 2**
    - [ ] API géospatiale fonctionnelle
    - [ ] Documentation des services
-   - [ ] Jeu de données test
+   - [x] Jeu de données test
 
 ### Phase 3 : Réglementation et Subventions (Semaines 8-12)
 
 1. **ReglementationAgent**
-   - [ ] Extraction des règles du Code Forestier
+   - [x] Extraction des règles du Code Forestier
    - [ ] Implémentation de RegulatoryFrameworkService
    - [ ] Implémentation de ComplianceCheckerService
 
@@ -297,14 +297,26 @@ Le suivi du projet est réalisé via :
 - Réunions hebdomadaires de synchronisation
 - Revues de code avant chaque merge
 
+## Exemples d'utilisation
+
+Le projet contient plusieurs exemples d'utilisation dans le dossier `examples/` :
+
+- `geo_agent_example.py` : Montre comment utiliser le GeoAgent v2 avec l'API directe, le message bus, et la communication inter-agents.
+
+Pour exécuter un exemple :
+
+```bash
+python examples/geo_agent_example.py
+```
+
 ## Roadmap Détaillée
 
 - [x] Architecture de base du système
 - [x] Implémentation de l'agent de géotraitement avec données locales
-- [ ] Refactoring en architecture multi-couches (S2)
-- [ ] Implémentation du message bus (S3)
-- [ ] Implémentation de l'agent memory (S3)
-- [ ] Réfactoring du GeoAgent (S4-S5)
+- [x] Refactoring en architecture multi-couches
+- [x] Implémentation du message bus
+- [x] Implémentation de l'agent memory
+- [x] Réfactoring du GeoAgent
 - [ ] Services géospatiaux complets (S6-S7)
 - [ ] Implémentation de l'agent de réglementation forestière (S8-S10)
 - [ ] Implémentation de l'agent de subventions (S10-S12)
