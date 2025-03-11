@@ -1,0 +1,122 @@
+[
+  {
+    "id": "CE-20220614",
+    "title": "Caractère forestier d'une parcelle",
+    "court": "Conseil d'État",
+    "date": "2022-06-14",
+    "number": "458521",
+    "description": "Le caractère forestier d'une parcelle s'apprécie au moment de la demande de défrichement, indépendamment de sa destination future. Une parcelle conserve son caractère forestier même après une coupe à blanc ou un incendie, tant qu'elle n'a pas perdu sa vocation forestière dans les documents d'urbanisme.",
+    "reference": "CE, 14 juin 2022, n°458521",
+    "theme": "Défrichement",
+    "impact": "Cette décision confirme une approche stricte de la notion de bois et forêt au sens du Code forestier, rendant obligatoire une autorisation de défrichement même pour des terrains temporairement déboisés.",
+    "keywords": ["défrichement", "caractère forestier", "coupe", "destination"]
+  },
+  {
+    "id": "CAA-BDX-20230518",
+    "title": "Légalité des refus de défrichement",
+    "court": "Cour Administrative d'Appel de Bordeaux",
+    "date": "2023-05-18",
+    "number": "21BX03455",
+    "description": "Le préfet peut légalement refuser une autorisation de défrichement en se fondant sur le rôle écologique local joué par le boisement concerné, même si celui-ci ne présente pas une valeur écologique exceptionnelle à l'échelle régionale ou nationale.",
+    "reference": "CAA Bordeaux, 18 mai 2023, n°21BX03455",
+    "theme": "Défrichement",
+    "impact": "Cette jurisprudence renforce le pouvoir discrétionnaire de l'administration pour refuser des défrichements au motif de la protection écologique, même pour des boisements de valeur modeste à l'échelle locale.",
+    "keywords": ["défrichement", "refus", "préfet", "écologie", "local"]
+  },
+  {
+    "id": "CE-20210122",
+    "title": "Obligation de reboisement après coupe rase",
+    "court": "Conseil d'État",
+    "date": "2021-01-22",
+    "number": "433814",
+    "description": "L'obligation de reconstitution d'un état boisé après une coupe rase s'impose même si le propriétaire a changé entre la coupe et l'échéance du délai de reboisement. Le nouveau propriétaire ne peut se prévaloir de sa bonne foi ou de son ignorance de l'état antérieur du terrain.",
+    "reference": "CE, 22 janvier 2021, n°433814",
+    "theme": "Reboisement",
+    "impact": "Cette décision confirme le caractère réel (attaché au terrain) de l'obligation de reboisement, qui se transmet avec la propriété indépendamment de la connaissance qu'en a l'acquéreur.",
+    "keywords": ["reboisement", "coupe rase", "propriétaire", "obligation", "reconstitution"]
+  },
+  {
+    "id": "CC-CIV3-20240218",
+    "title": "Servitude de passage en forêt",
+    "court": "Cour de Cassation, 3ème chambre civile",
+    "date": "2024-02-18",
+    "number": "23-11.742",
+    "description": "La servitude de passage pour l'exploitation forestière prévue par l'article L.155-1 du Code forestier peut être reconnue même en l'absence d'enclave stricte de la parcelle, dès lors que l'accès existant ne permet pas raisonnablement l'exploitation forestière dans des conditions économiques et techniques viables.",
+    "reference": "Cass. civ. 3e, 18 février 2024, n°23-11.742",
+    "theme": "Servitude",
+    "impact": "Cette interprétation extensive de la notion de servitude forestière facilite l'exploitation des parcelles difficiles d'accès sans pour autant les considérer juridiquement comme enclavées.",
+    "keywords": ["servitude", "passage", "exploitation", "enclave", "accès"]
+  },
+  {
+    "id": "CAA-MARS-20230706",
+    "title": "Validité des plans simples de gestion",
+    "court": "Cour Administrative d'Appel de Marseille",
+    "date": "2023-07-06",
+    "number": "22MA01524",
+    "description": "Un plan simple de gestion (PSG) peut être partiellement invalidé par le juge administratif sans entraîner sa nullité totale. Seules les dispositions incompatibles avec la législation en vigueur peuvent être censurées, les autres continuant à s'appliquer.",
+    "reference": "CAA Marseille, 6 juillet 2023, n°22MA01524",
+    "theme": "Document de gestion durable",
+    "impact": "Cette décision sécurise les propriétaires forestiers en évitant l'annulation complète d'un PSG pour des irrégularités partielles, ce qui aurait pu les priver des avantages fiscaux associés.",
+    "keywords": ["plan simple de gestion", "PSG", "nullité", "partielle", "validation"]
+  },
+  {
+    "id": "CE-20240312",
+    "title": "Qualification des coupes exceptionnelles",
+    "court": "Conseil d'État",
+    "date": "2024-03-12",
+    "number": "467392",
+    "description": "Une coupe qui déroge significativement au plan simple de gestion agréé, tant par son ampleur que par sa nature, doit être qualifiée de coupe exceptionnelle au sens de l'article L.312-5 du Code forestier et nécessite une autorisation spécifique du CRPF, même si elle n'est pas expressément interdite par le PSG.",
+    "reference": "CE, 12 mars 2024, n°467392",
+    "theme": "Coupes",
+    "impact": "Cette jurisprudence encadre plus strictement les possibilités de déroger aux documents de gestion durable et renforce le contrôle des CRPF sur les coupes non prévues initialement.",
+    "keywords": ["coupe", "exceptionnelle", "PSG", "autorisation", "CRPF"]
+  },
+  {
+    "id": "CAA-NANCY-20220907",
+    "title": "Compensation au défrichement",
+    "court": "Cour Administrative d'Appel de Nancy",
+    "date": "2022-09-07",
+    "number": "21NC00186",
+    "description": "La détermination du coefficient multiplicateur pour la compensation au défrichement doit être proportionnée aux enjeux écologiques et économiques réels. Le juge peut censurer un coefficient jugé manifestement excessif au regard des caractéristiques du boisement concerné.",
+    "reference": "CAA Nancy, 7 septembre 2022, n°21NC00186",
+    "theme": "Défrichement",
+    "impact": "Cette décision encadre le pouvoir de l'administration dans la fixation des compensations au défrichement et ouvre la voie à des recours contre des exigences disproportionnées.",
+    "keywords": ["défrichement", "compensation", "coefficient", "proportionnalité", "reboisement"]
+  },
+  {
+    "id": "CAA-LYON-20221010",
+    "title": "Autorisation tacite de coupe",
+    "court": "Cour Administrative d'Appel de Lyon",
+    "date": "2022-10-10",
+    "number": "22LY00783",
+    "description": "Une demande d'autorisation de coupe adressée au CRPF peut faire naître une autorisation tacite si l'administration garde le silence pendant deux mois. Cette autorisation tacite est opposable même si la coupe contrevient aux préconisations générales du SRGS, dès lors que la demande était complète et précise.",
+    "reference": "CAA Lyon, 10 octobre 2022, n°22LY00783",
+    "theme": "Coupes",
+    "impact": "Cette jurisprudence conforte le mécanisme d'autorisation tacite et incite l'administration à répondre expressément aux demandes de coupes qu'elle souhaite encadrer ou refuser.",
+    "keywords": ["coupe", "autorisation tacite", "silence", "administration", "CRPF"]
+  },
+  {
+    "id": "CC-CRIM-20230905",
+    "title": "Infraction d'exploitation illicite",
+    "court": "Cour de Cassation, chambre criminelle",
+    "date": "2023-09-05",
+    "number": "22-86.721",
+    "description": "Le délit d'exploitation forestière illicite prévu par le Code forestier est constitué même en l'absence d'intention frauduleuse, dès lors que l'auteur a connaissance de l'obligation d'autorisation préalable. La simple négligence ou l'ignorance de la loi n'est pas exonératoire.",
+    "reference": "Cass. crim., 5 septembre 2023, n°22-86.721",
+    "theme": "Infractions forestières",
+    "impact": "Cette décision renforce la répression des coupes illicites en facilitant la caractérisation de l'élément moral de l'infraction, qui n'exige pas de démontrer une intention frauduleuse.",
+    "keywords": ["délit", "exploitation", "intention", "coupe", "autorisation"]
+  },
+  {
+    "id": "CE-20230428",
+    "title": "Défrichement et zones humides",
+    "court": "Conseil d'État",
+    "date": "2023-04-28",
+    "number": "454632",
+    "description": "L'autorisation de défrichement d'un boisement situé en zone humide doit être précédée d'une étude d'impact approfondie sur le fonctionnement hydrologique du site, même si la superficie concernée est inférieure aux seuils habituels de soumission à étude d'impact.",
+    "reference": "CE, 28 avril 2023, n°454632",
+    "theme": "Défrichement",
+    "impact": "Cette jurisprudence renforce la protection des zones humides boisées en appliquant un principe de précaution renforcé pour les autorisations de défrichement dans ces milieux particulièrement sensibles.",
+    "keywords": ["défrichement", "zone humide", "étude d'impact", "hydrologie", "milieu sensible"]
+  }
+]
