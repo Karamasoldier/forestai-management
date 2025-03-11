@@ -1,0 +1,162 @@
+[
+  {
+    "id": "L112-1",
+    "title": "Définition de la forêt",
+    "content": "Sont considérés comme des bois et forêts au titre du présent code les plantations d'essences forestières et les reboisements ainsi que les terrains à boiser du fait d'une obligation légale ou conventionnelle.",
+    "keywords": ["définition", "forêt", "bois", "plantation", "reboisement"],
+    "book": 1,
+    "title_num": 1,
+    "chapter": 2,
+    "section": null
+  },
+  {
+    "id": "L121-1",
+    "title": "Politique forestière",
+    "content": "La politique forestière relève de la compétence de l'État. Ses orientations, ses financements et ses investissements s'inscrivent dans le long terme.",
+    "keywords": ["politique", "forestière", "état", "orientation", "financement"],
+    "book": 1,
+    "title_num": 2,
+    "chapter": 1,
+    "section": null
+  },
+  {
+    "id": "L124-5",
+    "title": "Documents de gestion durable",
+    "content": "Les documents de gestion, établis conformément aux directives et schémas régionaux mentionnés à l'article L. 122-2, sont agréés selon les modalités fixées par décret en Conseil d'État. L'agrément des plans simples de gestion est accordé par le centre régional de la propriété forestière.",
+    "keywords": ["gestion", "document", "plan simple", "agrément", "CRPF"],
+    "book": 1,
+    "title_num": 2,
+    "chapter": 4,
+    "section": null
+  },
+  {
+    "id": "L212-1",
+    "title": "Gestion des forêts publiques",
+    "content": "Les bois et forêts relevant du régime forestier satisfont de manière spécifique à des besoins d'intérêt général soit par l'accomplissement des obligations particulières prévues par ce régime, soit par une promotion d'activités telles que l'accueil du public, la conservation des milieux, la prise en compte de la biodiversité et la recherche scientifique.",
+    "keywords": ["forêt", "publique", "régime forestier", "intérêt général", "biodiversité"],
+    "book": 2,
+    "title_num": 1,
+    "chapter": 2,
+    "section": null
+  },
+  {
+    "id": "L341-1",
+    "title": "Défrichement - définition",
+    "content": "Est un défrichement toute opération volontaire ayant pour effet de détruire l'état boisé d'un terrain et de mettre fin à sa destination forestière.",
+    "keywords": ["défrichement", "définition", "boisé", "destruction", "destination"],
+    "book": 3,
+    "title_num": 4,
+    "chapter": 1,
+    "section": null
+  },
+  {
+    "id": "L341-3",
+    "title": "Autorisation de défrichement",
+    "content": "Nul ne peut user du droit de défricher ses bois et forêts sans avoir préalablement obtenu une autorisation. L'autorisation de défrichement peut être refusée lorsque la conservation des bois et forêts ou des massifs qu'ils complètent, ou le maintien de la destination forestière des sols, est reconnu nécessaire.",
+    "keywords": ["défrichement", "autorisation", "demande", "conservation", "refus"],
+    "book": 3,
+    "title_num": 4,
+    "chapter": 1,
+    "section": null
+  },
+  {
+    "id": "L341-6",
+    "title": "Compensation au défrichement",
+    "content": "L'autorité administrative compétente de l'État subordonne son autorisation à l'une ou plusieurs des conditions suivantes : 1° L'exécution, sur d'autres terrains, de travaux de boisement ou reboisement pour une surface correspondant à la surface défrichée, assortie, le cas échéant, d'un coefficient multiplicateur compris entre 1 et 5, déterminé en fonction du rôle économique, écologique et social des bois et forêts objets du défrichement, ou d'autres travaux d'amélioration sylvicoles d'un montant équivalent.",
+    "keywords": ["défrichement", "compensation", "reboisement", "coefficient", "autorisation"],
+    "book": 3,
+    "title_num": 4,
+    "chapter": 1,
+    "section": null
+  },
+  {
+    "id": "L312-1",
+    "title": "Plan simple de gestion",
+    "content": "Doivent être gérés conformément à un plan simple de gestion agréé, sous réserve des dispositions de l'article L. 122-5, les bois et forêts des particuliers constitués soit d'une parcelle forestière d'un seul tenant d'une surface égale ou supérieure à 25 hectares, soit d'un ensemble de parcelles forestières d'une surface totale égale ou supérieure à 25 hectares appartenant à un même propriétaire, situées dans une même zone géographique définie par décret.",
+    "keywords": ["plan simple", "gestion", "PSG", "obligatoire", "25 hectares"],
+    "book": 3,
+    "title_num": 1,
+    "chapter": 2,
+    "section": null
+  },
+  {
+    "id": "L112-2",
+    "title": "Rôle d'intérêt général des forêts",
+    "content": "Tout propriétaire exerce sur ses bois et forêts tous les droits résultant de la propriété dans les limites spécifiées par le présent code et par la loi, afin de contribuer, par une gestion durable, à l'équilibre biologique et à la satisfaction des besoins en bois et autres produits forestiers.",
+    "keywords": ["propriété", "droits", "gestion durable", "équilibre biologique", "intérêt général"],
+    "book": 1,
+    "title_num": 1,
+    "chapter": 2,
+    "section": null
+  },
+  {
+    "id": "L124-1",
+    "title": "Documents de gestion durable - principes",
+    "content": "Les documents de gestion durable des bois et forêts sont : 1° Les documents d'aménagement ; 2° Les plans simples de gestion ; 3° Les règlements types de gestion ; 4° Les codes des bonnes pratiques sylvicoles.",
+    "keywords": ["gestion durable", "document", "aménagement", "PSG", "RTG", "CBPS"],
+    "book": 1,
+    "title_num": 2,
+    "chapter": 4,
+    "section": null
+  },
+  {
+    "id": "L214-13",
+    "title": "Coupes dans les forêts des collectivités",
+    "content": "Les coupes de toutes natures sont réalisées conformément aux dispositions de l'article L. 124-5, sans préjudice des dispositions des articles L. 211-5, L. 214-6 à L. 214-8 et L. 214-10. Les communes et autres collectivités ou personnes morales mentionnées au 2° du I de l'article L. 211-1 ne peuvent faire aucun changement à l'aménagement ou au mode d'exploitation de leurs bois sans l'autorisation préalable de l'autorité administrative compétente de l'État, après avis du représentant de la collectivité ou personne morale intéressée.",
+    "keywords": ["coupe", "collectivité", "autorisation", "exploitation", "aménagement"],
+    "book": 2,
+    "title_num": 1,
+    "chapter": 4,
+    "section": 5
+  },
+  {
+    "id": "L313-1",
+    "title": "Code des bonnes pratiques sylvicoles",
+    "content": "Le code des bonnes pratiques sylvicoles est un document élaboré par chaque centre régional de la propriété forestière et approuvé par le représentant de l'État dans la région, après avis de la commission régionale de la forêt et du bois.",
+    "keywords": ["CBPS", "code", "pratiques", "CRPF", "commission"],
+    "book": 3,
+    "title_num": 1,
+    "chapter": 3,
+    "section": null
+  },
+  {
+    "id": "L151-1",
+    "title": "Infractions forestières",
+    "content": "Les infractions forestières sont constatées : 1° Par les agents de l'Office national des forêts commissionnés à raison de leurs compétences en matière forestière et assermentés à cet effet ; 2° Par les gardes champêtres et les agents de police municipale.",
+    "keywords": ["infraction", "agent", "ONF", "police", "constatation"],
+    "book": 1,
+    "title_num": 5,
+    "chapter": 1,
+    "section": null
+  },
+  {
+    "id": "L332-1",
+    "title": "Coupes exceptionnelles",
+    "content": "Pour les coupes de bois et forêts des particuliers non réglées par un plan simple de gestion, le représentant de l'État dans le département, après avis du centre régional de la propriété forestière, peut, en cas d'urgence, imposer l'exécution forcée de travaux, coupes et abattages que nécessite l'état des bois.",
+    "keywords": ["coupe", "urgence", "exécution forcée", "particulier", "département"],
+    "book": 3,
+    "title_num": 3,
+    "chapter": 2,
+    "section": null
+  },
+  {
+    "id": "L121-6",
+    "title": "Protection des forêts contre l'incendie",
+    "content": "Le Conservatoire de la forêt méditerranéenne, placé sous l'autorité administrative compétente de l'État, a pour mission, dans les régions Provence-Alpes-Côte d'Azur, Corse, Languedoc-Roussillon et dans les départements limitrophes, la programmation et le financement des travaux d'aménagement concernant les massifs forestiers, destinés à réduire les risques d'incendies et à faciliter le combat des feux par les services d'incendie et de secours.",
+    "keywords": ["incendie", "méditerranée", "conservatoire", "aménagement", "financement"],
+    "book": 1,
+    "title_num": 2,
+    "chapter": 1,
+    "section": null
+  },
+  {
+    "id": "L411-1",
+    "title": "Groupements forestiers",
+    "content": "Le groupement forestier est un groupement de personnes physiques ou morales constitué en vue de la création ou de la conservation d'une ou plusieurs forêts, ou en vue de l'acquisition de forêts ou de terrains à boiser.",
+    "keywords": ["groupement", "forestier", "constitution", "conservation", "acquisition"],
+    "book": 4,
+    "title_num": 1,
+    "chapter": 1,
+    "section": null
+  }
+]
