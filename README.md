@@ -51,6 +51,45 @@ Les données géographiques doivent être téléchargées manuellement depuis le
 
 Placez les données téléchargées dans les dossiers appropriés définis dans le fichier `.env`.
 
+## Infrastructure de Logging
+
+ForestAI intègre une infrastructure de logging avancée qui offre :
+
+- Journalisation multi-niveaux (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- Sortie vers console et fichiers avec rotation automatique
+- Contexte d'exécution pour une meilleure traçabilité
+- Collecte de métriques de performance
+- Décorateurs pour le logging automatique des fonctions
+- Gestion centralisée de la configuration
+
+### Configuration du logging
+
+La configuration du logging peut être définie via des variables d'environnement ou programmatiquement :
+
+```python
+from forestai.core.utils.logging_config import LoggingConfig
+
+# Configuration personnalisée
+config = LoggingConfig.get_instance()
+config.init({
+    "level": "DEBUG",
+    "log_dir": "logs/myapp",
+    "format_string": "%(asctime)s - %(name)s - [%(levelname)s] - %(message)s"
+})
+```
+
+### Exemples d'utilisation
+
+Les exemples de logging sont disponibles dans les fichiers suivants :
+- `examples/logging_example.py` : Démonstration des fonctionnalités de base
+- `examples/geo_agent_v3_example.py` : Intégration avec le GeoAgent v3
+
+```bash
+# Exécuter les exemples
+python examples/logging_example.py
+python examples/geo_agent_v3_example.py
+```
+
 ## Agents et documentation
 
 - [Agent de géotraitement (GeoAgent)](docs/GeoAgent.md)
@@ -185,7 +224,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 1. **Infrastructure de base**
    - [x] Mise en place des couches architecturales
    - [x] Création de la structure des repositories de données
-   - [ ] Implémentation de l'infrastructure de logging
+   - [x] Implémentation de l'infrastructure de logging
    - [x] Configuration du système de tests unitaires
 
 2. **Message Bus**
@@ -302,6 +341,8 @@ Le suivi du projet est réalisé via :
 Le projet contient plusieurs exemples d'utilisation dans le dossier `examples/` :
 
 - `geo_agent_example.py` : Montre comment utiliser le GeoAgent v2 avec l'API directe, le message bus, et la communication inter-agents.
+- `logging_example.py` : Démontre l'utilisation de l'infrastructure de logging avancée.
+- `geo_agent_v3_example.py` : Illustre l'intégration du GeoAgent v3 avec l'infrastructure de logging.
 
 Pour exécuter un exemple :
 
@@ -317,6 +358,7 @@ python examples/geo_agent_example.py
 - [x] Implémentation du message bus
 - [x] Implémentation de l'agent memory
 - [x] Réfactoring du GeoAgent
+- [x] Implémentation de l'infrastructure de logging
 - [ ] Services géospatiaux complets (S6-S7)
 - [ ] Implémentation de l'agent de réglementation forestière (S8-S10)
 - [ ] Implémentation de l'agent de subventions (S10-S12)
