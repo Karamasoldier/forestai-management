@@ -72,10 +72,117 @@ python run.py --agent geoagent --action search_parcels --params '{"commune": "Sa
 python run.py --agent reglementation --action check_compliance --params '{"parcels": ["123456789"], "project_type": "boisement"}'
 ```
 
+## Approche architecturale
+
+Pour gérer efficacement la complexité croissante du système, la nouvelle architecture suit ces principes :
+
+### 1. Architecture en couches
+
+```
+┌─────────────────────────────────────────────────────┐
+│                     Agent Layer                      │
+│  (GeoAgent, ReglementationAgent, SubventionAgent)   │
+└───────────────────┬─────────────────────────────────┘
+                    │
+┌───────────────────▼─────────────────────────────────┐
+│                  Domain Layer                        │
+│ (ForestryAnalytics, RegulatoryFramework, etc.)      │
+└───────────────────┬─────────────────────────────────┘
+                    │
+┌───────────────────▼─────────────────────────────────┐
+│                Infrastructure Layer                  │
+│ (GeoData Access, Database, API Integration)         │
+└─────────────────────────────────────────────────────┘
+```
+
+### 2. Services de domaine
+
+Encapsuler la logique métier complexe dans des services spécialisés utilisés par les agents :
+
+```python
+# Exemple : ForestPotentialService utilisé par le GeoAgent
+forest_potential_service = ForestPotentialService(geo_data_repository, climate_repository)
+potential_score = forest_potential_service.analyze_parcel_potential(parcel_id)
+```
+
+### 3. Interfaces de communication standardisées
+
+Utiliser des structures de données fortement typées pour la communication entre agents :
+
+```python
+@dataclass
+class ParcelAnalysisRequest:
+    parcel_ids: List[str]
+    analysis_type: str
+    parameters: Dict[str, Any] = None
+```
+
+### 4. Bus de messages
+
+Implémenter un système de messagerie asynchrone entre agents pour un couplage faible :
+
+```python
+message_bus.publish("PARCEL_ANALYZED", {
+    "parcel_id": "123456789",
+    "potential_score": 0.85,
+    "suitable_species": ["pine", "oak"]
+})
+```
+
+### 5. Configuration modulaire
+
+Rendre les fonctionnalités des agents configurables pour faciliter les tests et le déploiement progressif.
+
+### 6. Mémoire partagée entre agents
+
+Système de stockage contextuel pour partager l'état entre les agents :
+
+```python
+agent_memory.store("analysis:123456789", analysis_result)
+```
+
+### 7. Journalisation et monitoring
+
+Journalisation détaillée des opérations des agents pour faciliter le débogage et l'optimisation.
+
+### 8. Framework de test
+
+Tests automatisés pour valider le comportement des agents.
+
+### 9. Déploiement par phases
+
+Suivre la roadmap en implémentant progressivement les agents et leurs fonctionnalités.
+
+### 10. Pattern de fédération
+
+Pour les agents complexes, les diviser en sous-agents spécialisés avec un coordinateur :
+
+```
+┌───────────────────────────────────┐
+│        GeoAgent Coordinator       │
+└──┬────────────┬─────────────┬─────┘
+   │            │             │
+┌──▼───┐    ┌───▼──┐    ┌─────▼────┐
+│Parcel│    │Terrain│    │Land Cover│
+│Agent │    │Agent  │    │Agent     │
+└──────┘    └───────┘    └──────────┘
+```
+
+## Intégration CrewAI (Optionnelle)
+
+Le système peut être adapté pour utiliser le framework CrewAI qui offre une orchestration avancée des agents IA autonomes. L'approche consisterait à :
+
+1. Convertir les agents actuels en agents CrewAI
+2. Transformer les méthodes d'agents en outils CrewAI
+3. Utiliser les capacités de collaboration native entre agents
+
 ## Roadmap
 
 - [x] Architecture de base du système
 - [x] Implémentation de l'agent de géotraitement avec données locales
+- [ ] Refactoring en architecture multi-couches
+- [ ] Implémentation des services de domaine
+- [ ] Implémentation du bus de messages
 - [ ] Implémentation de l'agent de réglementation forestière
 - [ ] Implémentation de l'agent de subventions
 - [ ] Implémentation de l'agent de diagnostic
