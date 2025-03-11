@@ -28,7 +28,7 @@ def main():
     parser.add_argument(
         "--agent", 
         type=str,
-        choices=["geoagent", "subsidy", "diagnostic", "document", "operator"],
+        choices=["geoagent", "reglementation", "subsidy", "diagnostic", "document", "operator"],
         help="Agent spécifique à exécuter"
     )
     parser.add_argument(
@@ -79,6 +79,7 @@ def main():
     os.makedirs(os.path.join(config["data_path"], "raw"), exist_ok=True)
     os.makedirs(os.path.join(config["data_path"], "processed"), exist_ok=True)
     os.makedirs(os.path.join(config["data_path"], "cache"), exist_ok=True)
+    os.makedirs(os.path.join(config["data_path"], "reglementation"), exist_ok=True)
     
     # Exécuter l'agent spécifié ou le système complet
     if args.agent:
@@ -96,6 +97,9 @@ def run_specific_agent(agent_name, config, action=None, params=None):
             # Note: à implémenter quand la structure sera créée
             from forestai.agents.geo_agent.geo_agent import GeoAgent
             agent = GeoAgent(config)
+        elif agent_name == "reglementation":
+            from forestai.agents.reglementation_agent.reglementation_agent import ReglementationAgent
+            agent = ReglementationAgent(config)
         elif agent_name == "subsidy":
             from forestai.agents.subsidy_agent.subsidy_agent import SubsidyAgent
             agent = SubsidyAgent(config)
@@ -146,7 +150,7 @@ def run_full_system(config):
     except ImportError:
         logger.warning("API REST non implémentée. Exécution des agents en mode CLI uniquement.")
         # Exécuter les agents disponibles en séquence
-        for agent in ["geoagent", "subsidy", "diagnostic", "document", "operator"]:
+        for agent in ["geoagent", "reglementation", "subsidy", "diagnostic", "document", "operator"]:
             run_specific_agent(agent, config)
 
 if __name__ == "__main__":
