@@ -176,18 +176,141 @@ Le système peut être adapté pour utiliser le framework CrewAI qui offre une o
 2. Transformer les méthodes d'agents en outils CrewAI
 3. Utiliser les capacités de collaboration native entre agents
 
-## Roadmap
+## Workflow et Plan d'Exécution
+
+Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases :
+
+### Phase 1 : Fondation (Semaines 1-3)
+
+1. **Infrastructure de base**
+   - [x] Mise en place des couches architecturales
+   - [ ] Création de la structure des repositories de données
+   - [ ] Implémentation de l'infrastructure de logging
+   - [ ] Configuration du système de tests unitaires
+
+2. **Message Bus**
+   - [ ] Conception de l'API du message bus
+   - [ ] Implémentation de la version synchrone
+   - [ ] Tests d'intégration entre deux services
+
+3. **Agent Memory**
+   - [ ] Implémentation de l'interface d'accès mémoire
+   - [ ] Implémentation du backend Redis ou SQLite
+   - [ ] Tests des opérations CRUD
+
+### Phase 2 : GeoAgent Amélioré (Semaines 4-7)
+
+1. **Réfactoring du GeoAgent**
+   - [ ] Extraction de la logique métier vers des services de domaine
+   - [ ] Implémentation de l'interface de communication
+   - [ ] Tests unitaires des services
+
+2. **Services Géospatiaux**
+   - [ ] Implémentation de ParcelService
+   - [ ] Implémentation de TerrainAnalysisService
+   - [ ] Implémentation de ForestPotentialService
+
+3. **Chargement de Données**
+   - [ ] Implémentation des loaders pour données cadastrales
+   - [ ] Implémentation des loaders pour BD TOPO
+   - [ ] Implémentation des loaders pour Corine Land Cover
+   - [ ] Tests d'intégration avec des données réelles
+
+4. **Délivrables Phase 2**
+   - [ ] API géospatiale fonctionnelle
+   - [ ] Documentation des services
+   - [ ] Jeu de données test
+
+### Phase 3 : Réglementation et Subventions (Semaines 8-12)
+
+1. **ReglementationAgent**
+   - [ ] Extraction des règles du Code Forestier
+   - [ ] Implémentation de RegulatoryFrameworkService
+   - [ ] Implémentation de ComplianceCheckerService
+
+2. **SubventionAgent**
+   - [ ] Implémentation du crawler de subventions
+   - [ ] Implémentation du système d'analyse d'éligibilité
+   - [ ] Implémentation du générateur de dossiers
+
+3. **Intégration**
+   - [ ] Tests d'intégration GeoAgent ↔ ReglementationAgent
+   - [ ] Tests d'intégration ReglementationAgent ↔ SubventionAgent
+
+4. **Délivrables Phase 3**
+   - [ ] API de conformité réglementaire
+   - [ ] Base de données de subventions
+   - [ ] Générateur de rapports de conformité
+
+### Phase 4 : Diagnostic et Interface (Semaines 13-16)
+
+1. **DiagnosticAgent**
+   - [ ] Implémentation du système d'analyse forestière
+   - [ ] Intégration avec les données géospatiales
+   - [ ] Tests avec des cas d'usage réels
+
+2. **DocumentAgent**
+   - [ ] Implémentation des templates de documents
+   - [ ] Intégration avec les autres agents
+   - [ ] Tests de génération automatique
+
+3. **Interface Utilisateur**
+   - [ ] Conception des wireframes
+   - [ ] Implémentation du frontend FastAPI
+   - [ ] Tests d'acceptation utilisateur
+
+4. **Délivrables Phase 4**
+   - [ ] Système de diagnostic complet
+   - [ ] Documents administratifs automatisés
+   - [ ] Interface utilisateur fonctionnelle
+
+## Méthodologie de Développement
+
+Pour chaque composant majeur, nous suivrons ce processus :
+
+1. **Conception** (1-2 jours)
+   - Définir les interfaces
+   - Établir les contrats
+   - Documenter les comportements attendus
+
+2. **Développement** (3-5 jours)
+   - Implémentation TDD
+   - Revue de code
+   - Documentation inline
+
+3. **Tests** (1-2 jours)
+   - Tests unitaires
+   - Tests d'intégration
+   - Tests de performance (si pertinent)
+
+4. **Livraison** (1 jour)
+   - Documentation d'utilisation
+   - Exemples d'utilisation
+   - Mise à jour du README
+
+## Suivi du Projet
+
+Le suivi du projet est réalisé via :
+
+- GitHub Issues pour les tâches spécifiques
+- GitHub Projects pour la vue d'ensemble
+- Réunions hebdomadaires de synchronisation
+- Revues de code avant chaque merge
+
+## Roadmap Détaillée
 
 - [x] Architecture de base du système
 - [x] Implémentation de l'agent de géotraitement avec données locales
-- [ ] Refactoring en architecture multi-couches
-- [ ] Implémentation des services de domaine
-- [ ] Implémentation du bus de messages
-- [ ] Implémentation de l'agent de réglementation forestière
-- [ ] Implémentation de l'agent de subventions
-- [ ] Implémentation de l'agent de diagnostic
-- [ ] Interface utilisateur
-- [ ] Déploiement cloud
+- [ ] Refactoring en architecture multi-couches (S2)
+- [ ] Implémentation du message bus (S3)
+- [ ] Implémentation de l'agent memory (S3)
+- [ ] Réfactoring du GeoAgent (S4-S5)
+- [ ] Services géospatiaux complets (S6-S7)
+- [ ] Implémentation de l'agent de réglementation forestière (S8-S10)
+- [ ] Implémentation de l'agent de subventions (S10-S12)
+- [ ] Implémentation de l'agent de diagnostic (S13-S14)
+- [ ] Interface utilisateur (S15-S16)
+- [ ] Documentation finale et déploiement (S16)
 
 ## Licence
 
