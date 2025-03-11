@@ -1,0 +1,116 @@
+# Instructions pour le travail sur ForestAI
+
+## Contexte du projet
+
+ForestAI est un système multi-agents dédié à la gestion forestière intelligente. Le projet vise à automatiser et optimiser plusieurs aspects de la gestion forestière, notamment :
+- L'identification des parcelles à potentiel forestier
+- L'analyse de la conformité réglementaire
+- La prospection de subventions
+- La génération de diagnostics et plans de gestion
+- La création automatique de documents administratifs
+
+## État actuel du projet
+
+Le projet a été restructuré suivant une architecture en couches :
+1. **Agent Layer** : Les agents spécialisés (GeoAgent, ReglementationAgent, etc.)
+2. **Domain Layer** : Les services métier et modèles de domaine
+3. **Infrastructure Layer** : L'accès aux données, le message bus, et la mémoire partagée
+
+### Développements réalisés :
+- Architecture en couches complète
+- Implémentation du système de message bus
+- Implémentation de la mémoire partagée entre agents
+- Création des modèles de domaine pour les parcelles et réglementations
+- Implémentation du service ForestPotentialService
+- Refactoring du GeoAgent vers l'architecture en couches (GeoAgentV2)
+- Implémentation du repository GeoPandas pour le stockage des parcelles
+- Création d'un exemple d'utilisation du GeoAgent
+
+## Prochaines tâches à réaliser
+
+Voici les tâches prioritaires à accomplir (par ordre d'importance) :
+
+### 1. Finalisation de la Phase 1 :
+- Implémentation complète de l'infrastructure de logging avancée
+  - Mettre en place un système de logs structurés
+  - Ajouter la rotation des logs
+  - Configurer différents niveaux de log par composant
+
+### 2. Continuation de la Phase 2 :
+- Implémentation du TerrainAnalysisService
+  - Extraction de pentes à partir de MNT
+  - Analyse de l'exposition des parcelles
+  - Détection des zones humides
+
+- Finalisation des loaders de données géographiques
+  - BD TOPO IGN
+  - Corine Land Cover
+  - MNT (RGE ALTI)
+
+- Création de l'API géospatiale complète
+  - Endpoints RESTful
+  - Documentation OpenAPI
+
+### 3. Démarrage de la Phase 3 :
+- Développement du RegulatoryFrameworkService
+  - Parser de textes réglementaires
+  - Système de règles et contraintes
+  - Moteur d'inférence pour la conformité
+
+## Conseils pour la continuation
+
+1. **Suivre l'architecture établie** : Respecter la séparation en couches et utiliser les patterns mis en place (repositories, services de domaine, etc.)
+
+2. **Utiliser le message bus** : Privilégier la communication asynchrone entre les agents via le message bus plutôt que des appels directs.
+
+3. **Tests d'abord** : Adopter une approche TDD (Test-Driven Development) en écrivant d'abord les tests avant d'implémenter les fonctionnalités.
+
+4. **Documentation inline** : Documenter le code avec des docstrings détaillés et maintenir à jour la documentation des différents composants.
+
+5. **Exemples d'utilisation** : Pour chaque nouveau composant majeur, créer un exemple d'utilisation dans le dossier 'examples/'.
+
+## Structure du projet
+
+Voici les principaux répertoires et fichiers à connaître :
+
+```
+forestai/
+├── agents/                    # Couche Agent
+│   ├── base_agent.py          # Classe de base pour tous les agents
+│   ├── geo_agent/
+│   │   ├── geo_agent.py       # Ancienne implémentation
+│   │   └── geo_agent_v2.py    # Nouvelle implémentation avec architecture en couches
+│   └── reglementation_agent/
+├── core/                      # Couches Domain et Infrastructure
+│   ├── domain/
+│   │   ├── models/            # Modèles de données du domaine
+│   │   │   ├── parcel.py      # Modèle de parcelle
+│   │   │   └── regulation.py  # Modèle de réglementation
+│   │   └── services/          # Services métier
+│   │       └── forest_potential_service.py
+│   └── infrastructure/
+│       ├── messaging/         # Bus de messages
+│       │   └── message_bus.py
+│       ├── memory/            # Mémoire partagée
+│       │   └── agent_memory.py
+│       └── repositories/      # Accès aux données
+│           ├── interfaces.py
+│           └── geopandas_parcel_repository.py
+├── examples/                  # Exemples d'utilisation
+│   └── geo_agent_example.py
+├── tests/                     # Tests unitaires et d'intégration
+└── run.py                     # Point d'entrée principal
+```
+
+## Ressources et Documentation
+
+- Consulter le README.md pour un aperçu complet du projet et de son état actuel
+- Les documents dans le dossier docs/ pour des informations détaillées sur les agents
+- Le workflow et plan d'exécution dans le README.md pour visualiser l'avancement
+
+## Remarques importantes
+
+- Ne pas modifier l'architecture en couches sans discussion préalable
+- Garder les interfaces stables pour assurer la compatibilité entre les composants
+- Mettre à jour le README.md après chaque accomplissement majeur
+- Cocher les tâches réalisées dans le plan d'exécution
