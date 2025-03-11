@@ -219,7 +219,7 @@ Le système peut être adapté pour utiliser le framework CrewAI qui offre une o
 
 Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases :
 
-### Phase 1 : Fondation (Semaines 1-3)
+### Phase 1 : Fondation
 
 1. **Infrastructure de base**
    - [x] Mise en place des couches architecturales
@@ -237,7 +237,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
    - [x] Implémentation du backend Redis ou SQLite
    - [x] Tests des opérations CRUD
 
-### Phase 2 : GeoAgent Amélioré (Semaines 4-7)
+### Phase 2 : GeoAgent Amélioré
 
 1. **Réfactoring du GeoAgent**
    - [x] Extraction de la logique métier vers des services de domaine
@@ -260,7 +260,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
    - [ ] Documentation des services
    - [x] Jeu de données test
 
-### Phase 3 : Réglementation et Subventions (Semaines 8-12)
+### Phase 3 : Réglementation et Subventions
 
 1. **ReglementationAgent**
    - [x] Extraction des règles du Code Forestier
@@ -281,7 +281,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
    - [ ] Base de données de subventions
    - [ ] Générateur de rapports de conformité
 
-### Phase 4 : Diagnostic et Interface (Semaines 13-16)
+### Phase 4 : Diagnostic et Interface
 
 1. **DiagnosticAgent**
    - [ ] Implémentation du système d'analyse forestière
@@ -307,22 +307,22 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 
 Pour chaque composant majeur, nous suivrons ce processus :
 
-1. **Conception** (1-2 jours)
+1. **Conception**
    - Définir les interfaces
    - Établir les contrats
    - Documenter les comportements attendus
 
-2. **Développement** (3-5 jours)
+2. **Développement**
    - Implémentation TDD
    - Revue de code
    - Documentation inline
 
-3. **Tests** (1-2 jours)
+3. **Tests**
    - Tests unitaires
    - Tests d'intégration
    - Tests de performance (si pertinent)
 
-4. **Livraison** (1 jour)
+4. **Livraison**
    - Documentation d'utilisation
    - Exemples d'utilisation
    - Mise à jour du README
@@ -359,12 +359,12 @@ python examples/geo_agent_example.py
 - [x] Implémentation de l'agent memory
 - [x] Réfactoring du GeoAgent
 - [x] Implémentation de l'infrastructure de logging
-- [ ] Services géospatiaux complets (S6-S7)
-- [ ] Implémentation de l'agent de réglementation forestière (S8-S10)
-- [ ] Implémentation de l'agent de subventions (S10-S12)
-- [ ] Implémentation de l'agent de diagnostic (S13-S14)
-- [ ] Interface utilisateur (S15-S16)
-- [ ] Documentation finale et déploiement (S16)
+- [ ] Services géospatiaux complets
+- [ ] Implémentation de l'agent de réglementation forestière
+- [ ] Implémentation de l'agent de subventions
+- [ ] Implémentation de l'agent de diagnostic
+- [ ] Interface utilisateur
+- [ ] Documentation finale et déploiement
 
 ## Licence
 
