@@ -65,6 +65,40 @@ result = coordinator.analyze_terrain(
 )
 ```
 
+### Loaders de données géospatiales
+
+Le projet inclut plusieurs chargeurs de données géospatiales optimisés pour différentes sources:
+
+```
+data_loaders/
+├── cadastre_loader.py          # Données cadastrales (format local)
+├── corine_land_cover_loader.py # Données d'occupation des sols (PostgreSQL)
+└── bdtopo_loader.py            # Données topographiques (format local)
+```
+
+#### Loader Corine Land Cover SQL
+
+Le `CorineLandCoverLoader` permet d'accéder aux données d'occupation des sols stockées dans une base de données PostgreSQL avec extension PostGIS. Ce loader:
+
+- Détermine automatiquement les noms de tables et de colonnes
+- Effectue des requêtes spatiales optimisées pour extraire uniquement les données nécessaires
+- Calcule les statistiques d'occupation des sols (dominante, pourcentages)
+- Évalue le potentiel forestier basé sur l'occupation des sols
+- Recommande des espèces adaptées selon le type de sol
+
+Exemple d'utilisation:
+```python
+from forestai.agents.geo_agent.data_loaders.corine_land_cover_loader import CorineLandCoverLoader
+
+loader = CorineLandCoverLoader()
+land_cover = loader.get_dominant_landcover(parcel_geometry)
+potential = loader.calculate_forestry_potential(parcel_geometry)
+
+print(f"Occupation dominante: {land_cover['dominant_label']}")
+print(f"Potentiel forestier: {potential['potential_score']}")
+print(f"Espèces recommandées: {potential['recommended_species']}")
+```
+
 ### Standardisation des géométries
 
 Toutes les analyses spatiales sont standardisées sur la projection Lambert 93 (EPSG:2154) pour :
@@ -74,7 +108,7 @@ Toutes les analyses spatiales sont standardisées sur la projection Lambert 93 (
 
 ## Données géographiques
 
-Suite à l'arrêt de la génération de clés API Geoservices par l'IGN début 2024, ForestAI fonctionne avec des données géographiques téléchargées localement dans le dossier `data/raw/`. Pour plus d'informations, consultez la [documentation du GeoAgent](docs/GeoAgent.md).
+Suite à l'arrêt de la génération de clés API Geoservices par l'IGN début 2024, ForestAI fonctionne avec des données géographiques téléchargées localement dans le dossier `data/raw/` ou accessibles via une base de données PostgreSQL/PostGIS. Pour plus d'informations, consultez la [documentation du GeoAgent](docs/GeoAgent.md).
 
 ## Installation
 
@@ -91,6 +125,39 @@ pip install -r requirements.txt
 cp .env.example .env
 # Éditer .env avec vos clés API et chemins de données
 ```
+
+### Configuration de PostgreSQL pour Corine Land Cover
+
+Pour utiliser les données Corine Land Cover au format SQL:
+
+1. Installer PostgreSQL avec l'extension PostGIS
+   ```bash
+   # Sur Ubuntu/Debian
+   sudo apt-get install postgresql postgresql-contrib postgis
+   
+   # Sur macOS avec Homebrew
+   brew install postgresql postgis
+   ```
+
+2. Créer une base de données avec l'extension PostGIS
+   ```bash
+   createdb forestai
+   psql -d forestai -c "CREATE EXTENSION postgis;"
+   ```
+
+3. Importer les données Corine Land Cover
+   ```bash
+   psql -d forestai -f corine_land_cover.sql
+   ```
+
+4. Configurer le fichier `.env` avec les paramètres de connexion
+   ```
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=forestai
+   DB_USER=postgres
+   DB_PASSWORD=votre_mot_de_passe
+   ```
 
 ## Téléchargement des données
 
@@ -136,12 +203,14 @@ Les exemples de logging sont disponibles dans les fichiers suivants :
 - `examples/logging_example.py` : Démonstration des fonctionnalités de base
 - `examples/geo_agent_v3_example.py` : Intégration avec le GeoAgent v3
 - `examples/terrain_services_example.py` : Utilisation des services de terrain modulaires
+- `examples/corine_land_cover_example.py` : Utilisation du loader Corine Land Cover SQL
 
 ```bash
 # Exécuter les exemples
 python examples/logging_example.py
 python examples/geo_agent_v3_example.py
 python examples/terrain_services_example.py
+python examples/corine_land_cover_example.py
 ```
 
 ## Agents et documentation
@@ -313,8 +382,8 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 
 4. **Chargement de Données**
    - [x] Implémentation des loaders pour données cadastrales
+   - [x] Implémentation du loader pour Corine Land Cover (PostgreSQL)
    - [ ] Implémentation des loaders pour BD TOPO
-   - [ ] Implémentation des loaders pour Corine Land Cover
    - [ ] Tests d'intégration avec des données réelles
 
 5. **Délivrables Phase 2**
@@ -407,6 +476,7 @@ Le projet contient plusieurs exemples d'utilisation dans le dossier `examples/` 
 - `logging_example.py` : Démontre l'utilisation de l'infrastructure de logging avancée.
 - `geo_agent_v3_example.py` : Illustre l'intégration du GeoAgent v3 avec l'infrastructure de logging.
 - `terrain_services_example.py` : Démontre l'utilisation des services de terrain modulaires et du coordinateur.
+- `corine_land_cover_example.py` : Montre comment utiliser le loader SQL pour les données Corine Land Cover.
 
 Pour exécuter un exemple :
 
@@ -418,10 +488,10 @@ python examples/terrain_services_example.py
 
 Les prochaines étapes prioritaires sont :
 
-1. **Intégration de données terrain supplémentaires**
-   - Implémentation des loaders pour BD TOPO
-   - Implémentation des loaders pour Corine Land Cover
-   - Intégration de données climatiques
+1. **Finalisation de l'infrastructure géospatiale**
+   - Implémentation du loader pour BD TOPO
+   - Intégration du loader Corine Land Cover avec le TerrainCoordinator
+   - Tests d'intégration avec le dataset complet
 
 2. **Développement du ReglementationAgent**
    - Implémentation de RegulatoryFrameworkService
@@ -454,7 +524,8 @@ Les contributions sont les bienvenues. Voici comment contribuer :
 - [x] Implémentation de l'infrastructure de logging
 - [x] Modularisation des services de terrain
 - [x] Implémentation du coordinateur de terrain
-- [ ] Services géospatiaux complets avec BD TOPO et Corine Land Cover
+- [x] Implémentation du loader Corine Land Cover SQL
+- [ ] Services géospatiaux complets avec BD TOPO
 - [ ] Implémentation de l'agent de réglementation forestière
 - [ ] Implémentation de l'agent de subventions
 - [ ] Implémentation de l'agent de diagnostic
