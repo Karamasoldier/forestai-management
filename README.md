@@ -20,6 +20,35 @@ Système multi-agents pour l'automatisation et l'optimisation de la gestion fore
 - **DocumentAgent** : Génération de documents administratifs
 - **ExploitantAgent** : Base de données des opérateurs forestiers
 
+## Nouvelles approches architecturales
+
+### Services modulaires de terrain
+
+Pour optimiser les performances et la maintenance, les services d'analyse de terrain ont été décomposés en modules spécialisés :
+
+```
+terrain_services/
+├── base_terrain_service.py  # Classe de base avec fonctionnalités communes
+├── elevation_service.py     # Analyse d'altitude (MNT)
+├── slope_service.py         # Calcul de pente et exposition
+├── hydrology_service.py     # Analyse des cours d'eau
+├── risk_service.py          # Analyse des risques naturels
+└── terrain_coordinator.py   # Orchestrateur d'analyses
+```
+
+Cette approche offre plusieurs avantages :
+- **Modularité** : Chaque service se concentre sur un aspect précis
+- **Performance** : Possibilité de paralléliser les analyses
+- **Maintenance** : Code plus facile à maintenir et à tester
+- **Réutilisabilité** : Les services peuvent être utilisés indépendamment
+
+### Standardisation des géométries
+
+Toutes les analyses spatiales sont standardisées sur la projection Lambert 93 (EPSG:2154) pour :
+- Assurer la compatibilité avec les données cadastrales et IGN
+- Effectuer des calculs métriques corrects (surface, distance)
+- Minimiser les déformations pour le territoire français
+
 ## Données géographiques
 
 Suite à l'arrêt de la génération de clés API Geoservices par l'IGN début 2024, ForestAI fonctionne avec des données géographiques téléchargées localement dans le dossier `data/raw/`. Pour plus d'informations, consultez la [documentation du GeoAgent](docs/GeoAgent.md).
@@ -246,7 +275,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 
 2. **Services Géospatiaux**
    - [x] Implémentation de ParcelService
-   - [ ] Implémentation de TerrainAnalysisService
+   - [x] Implémentation de TerrainAnalysisService (modularisé)
    - [x] Implémentation de ForestPotentialService
 
 3. **Chargement de Données**
@@ -359,6 +388,7 @@ python examples/geo_agent_example.py
 - [x] Implémentation de l'agent memory
 - [x] Réfactoring du GeoAgent
 - [x] Implémentation de l'infrastructure de logging
+- [x] Modularisation des services de terrain (en cours)
 - [ ] Services géospatiaux complets
 - [ ] Implémentation de l'agent de réglementation forestière
 - [ ] Implémentation de l'agent de subventions
