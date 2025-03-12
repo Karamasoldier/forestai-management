@@ -137,3 +137,86 @@ class BDTopoLoader:
             Liste des thèmes disponibles
         """
         return list(self.available_files.keys())
+    
+    def load_data_for_geometry(self, theme: str, geometry: Union[dict, gpd.GeoDataFrame, Polygon], 
+                              buffer_distance: float = 0) -> Optional[gpd.GeoDataFrame]:
+        """
+        Charge les données BD TOPO pour un thème et une géométrie donnés.
+        
+        Args:
+            theme: Thème BD TOPO à charger
+            geometry: Géométrie pour laquelle charger les données (GeoJSON, GeoDataFrame ou Polygon)
+            buffer_distance: Distance de buffer en mètres à appliquer à la géométrie
+            
+        Returns:
+            GeoDataFrame contenant les données BD TOPO, ou None en cas d'erreur
+        """
+        if theme not in self.available_files or not self.available_files[theme]:
+            self.logger.error(f"Thème '{theme}' non disponible ou sans fichiers")
+            return None
+        
+        try:
+            # Conversion de la géométrie en objet shapely
+            if isinstance(geometry, dict):  # GeoJSON
+                geom = shape(geometry)
+            elif isinstance(geometry, gpd.GeoDataFrame):
+                geom = geometry.geometry.iloc[0]
+            else:
+                geom = geometry
+            
+            # Appliquer le buffer si nécessaire
+            if buffer_distance > 0:
+                search_geom = geom.buffer(buffer_distance)
+            else:
+                search_geom = geom
+            
+            # Enveloppe pour recherche rapide
+            bounds = search_geom.bounds
+            
+            results = []
+            
+            # Parcourir tous les fichiers du thème
+            for file_path in self.available_files[theme]:
+                self.logger.debug(f"Chargement du fichier {file_path}")
+                
+                try:
+                    # Charger le shapefile avec GeoPandas
+                    gdf = gpd.read_file(file_path, bbox=bounds)
+                    
+                    # Si des données ont été trouvées dans l'enveloppe
+                    if not gdf.empty:
+                        # Filtrer par intersection avec la géométrie de recherche
+                        # Assurer que la projection est en Lambert 93 (EPSG:2154)
+                        if gdf.crs is None:
+                            self.logger.warning(f"Le fichier {file_path} n'a pas de CRS défini, on suppose EPSG:2154")
+                            gdf.set_crs("EPSG:2154", inplace=True)
+                        elif gdf.crs != "EPSG:2154":
+                            gdf = gdf.to_crs("EPSG:2154")
+                        
+                        # Ajouter le nom du fichier source comme attribut
+                        gdf['source_file'] = os.path.basename(file_path)
+                        
+                        # Filtrer par intersection spatiale
+                        mask = gdf.intersects(search_geom)
+                        filtered_gdf = gdf[mask].copy()
+                        
+                        if not filtered_gdf.empty:
+                            results.append(filtered_gdf)
+                            self.logger.debug(f"Fichier {file_path}: {len(filtered_gdf)} entités trouvées")
+                
+                except Exception as e:
+                    self.logger.error(f"Erreur lors du chargement du fichier {file_path}: {str(e)}")
+                    continue
+            
+            # Combiner tous les résultats
+            if results:
+                combined_gdf = pd.concat(results, ignore_index=True)
+                self.logger.info(f"Thème '{theme}': {len(combined_gdf)} entités trouvées au total")
+                return combined_gdf
+            else:
+                self.logger.warning(f"Aucune donnée trouvée pour le thème '{theme}' et la géométrie spécifiée")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Erreur lors du chargement des données: {str(e)}")
+            return None
