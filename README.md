@@ -58,6 +58,26 @@ Cette architecture offre :
 - **Évolutivité** : Ajout facile de nouvelles réglementations
 - **Maintenabilité** : Code organisé par domaine fonctionnel
 
+### Services d'analyse climatique (NOUVEAU)
+
+Un nouveau module d'analyse climatique a été ajouté pour intégrer les données Climessences de l'ONF :
+
+```
+domain/services/
+├── climate_analyzer.py           # Orchestrateur principal
+├── climate_data_loader.py        # Chargement des données climatiques
+├── climate_zone_analyzer.py      # Analyse des zones climatiques
+└── species_recommender.py        # Recommandation d'espèces adaptées
+```
+
+Ce module permet :
+- **Identification des zones climatiques** pour une parcelle donnée
+- **Recommandation d'espèces adaptées** au climat actuel
+- **Anticipation des impacts** du changement climatique
+- **Intégration avec l'analyse de terrain** pour des recommandations complètes
+
+Pour plus d'informations, consultez la [documentation du ClimateAnalyzer](docs/ClimateAnalyzer.md).
+
 ### Coordinateur de terrain
 
 Le coordinateur de terrain (`terrain_coordinator.py`) est un orchestrateur qui :
@@ -261,6 +281,7 @@ Les exemples de logging sont disponibles dans les fichiers suivants :
 - `examples/corine_land_cover_example.py` : Utilisation du loader Corine Land Cover SQL
 - `examples/bdtopo_loader_example.py` : Utilisation du loader modulaire pour les données BD TOPO
 - `examples/reglementation_agent_example.py` : Utilisation de l'agent de réglementation forestière
+- `examples/climate_analyzer_example.py` : Utilisation du module d'analyse climatique Climessences
 
 ```bash
 # Exécuter les exemples
@@ -270,12 +291,14 @@ python examples/terrain_services_example.py
 python examples/corine_land_cover_example.py
 python examples/bdtopo_loader_example.py
 python examples/reglementation_agent_example.py
+python examples/climate_analyzer_example.py
 ```
 
 ## Agents et documentation
 
 - [Agent de géotraitement (GeoAgent)](docs/GeoAgent.md)
 - [Agent de réglementation forestière (ReglementationAgent)](docs/ReglementationAgent.md)
+- [Module d'analyse climatique (ClimateAnalyzer)](docs/ClimateAnalyzer.md)
 
 ## Utilisation
 
@@ -328,6 +351,10 @@ potential_score = forest_potential_service.analyze_parcel_potential(parcel_id)
 # Exemple : RegulatoryFrameworkService utilisé par le ReglementationAgent
 regulatory_service = RegulatoryFrameworkService(data_path)
 regulations = regulatory_service.get_regulations_by_project_type("boisement")
+
+# Exemple : ClimateAnalyzer utilisé par le DiagnosticAgent
+climate_analyzer = ClimateAnalyzer()
+species_recommendations = climate_analyzer.recommend_species(geometry, scenario="2050_rcp45")
 ```
 
 ### 3. Interfaces de communication standardisées
@@ -455,7 +482,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
    - [x] Jeu de données test
    - [x] Exemples d'utilisation
 
-### Phase 3 : Réglementation et Subventions
+### Phase 3 : Réglementation, Climat et Subventions
 
 1. **ReglementationAgent**
    - [x] Extraction des règles du Code Forestier
@@ -463,17 +490,25 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
    - [x] Implémentation de ComplianceCheckerService
    - [x] Génération de rapports de conformité
 
-2. **SubventionAgent**
+2. **ClimateAnalyzer**
+   - [x] Implémentation de l'analyseur climatique modulaire
+   - [x] Intégration des données climatiques Climessences
+   - [x] Système de recommandation d'espèces adaptées
+   - [x] Scénarios de changement climatique
+
+3. **SubventionAgent**
    - [ ] Implémentation du crawler de subventions
    - [ ] Implémentation du système d'analyse d'éligibilité
    - [ ] Implémentation du générateur de dossiers
 
-3. **Intégration**
+4. **Intégration**
    - [ ] Tests d'intégration GeoAgent ↔ ReglementationAgent
+   - [x] Tests d'intégration GeoAgent ↔ ClimateAnalyzer 
    - [ ] Tests d'intégration ReglementationAgent ↔ SubventionAgent
 
-4. **Délivrables Phase 3**
+5. **Délivrables Phase 3**
    - [x] API de conformité réglementaire
+   - [x] API d'analyse climatique
    - [ ] Base de données de subventions
    - [x] Générateur de rapports de conformité
 
@@ -543,6 +578,7 @@ Le projet contient plusieurs exemples d'utilisation dans le dossier `examples/` 
 - `corine_land_cover_example.py` : Montre comment utiliser le loader SQL pour les données Corine Land Cover.
 - `bdtopo_loader_example.py` : Montre comment utiliser le loader modulaire pour les données BD TOPO.
 - `reglementation_agent_example.py` : Illustre l'utilisation de l'agent de réglementation pour vérifier la conformité des projets forestiers.
+- `climate_analyzer_example.py` : Démontre l'utilisation du module d'analyse climatique et de recommandation d'espèces.
 
 Pour exécuter un exemple :
 
@@ -564,6 +600,19 @@ Le nouvel agent de réglementation (ReglementationAgent) propose :
 
 Pour plus de détails, consultez la [documentation de l'agent de réglementation](docs/ReglementationAgent.md).
 
+## Fonctionnalités de l'analyseur climatique
+
+Le nouveau module d'analyse climatique (ClimateAnalyzer) propose :
+
+- **Identification des zones climatiques** pour une géométrie donnée
+- **Recommandation d'espèces adaptées** au climat actuel et futur
+- **Évaluation des risques climatiques** (sécheresse, gel, feux)
+- **Comparaison entre scénarios climatiques** (horizons 2050, 2100)
+- **Intégration avec les analyses de terrain** pour des recommandations complètes
+- **Architecture modulaire** permettant des extensions personnalisées
+
+Pour plus de détails, consultez la [documentation du module d'analyse climatique](docs/ClimateAnalyzer.md).
+
 ## Prochaines étapes
 
 Les prochaines étapes prioritaires sont :
@@ -579,12 +628,18 @@ Les prochaines étapes prioritaires sont :
    - [ ] Intégration avec des bases de données réglementaires externes
    - [ ] Extension à d'autres réglementations environnementales
 
-3. **Développement du SubventionAgent**
+3. **Intégration des données climatiques**
+   - [x] Implémentation du ClimateAnalyzer
+   - [x] Intégration avec le GeoAgent 
+   - [ ] Ajout de scénarios climatiques plus précis
+   - [ ] Augmentation de la base de données d'espèces
+
+4. **Développement du SubventionAgent**
    - [ ] Implémentation du crawler de subventions
    - [ ] Système d'analyse d'éligibilité
    - [ ] Générateur de dossiers de demande
 
-4. **Extension des tests**
+5. **Extension des tests**
    - [ ] Tests automatisés pour les services de terrain
    - [ ] Tests d'intégration entre agents
    - [ ] Tests de performance des analyses parallélisées
@@ -613,22 +668,11 @@ Les contributions sont les bienvenues. Voici comment contribuer :
 - [x] Implémentation du loader Corine Land Cover SQL
 - [x] Services géospatiaux complets avec BD TOPO
 - [x] Implémentation de l'agent de réglementation forestière
+- [x] Implémentation du module d'analyse climatique Climessences
 - [ ] Implémentation de l'agent de subventions
 - [ ] Implémentation de l'agent de diagnostic
 - [ ] Interface utilisateur
 - [ ] Documentation finale et déploiement
-
-## Intégration des données climatiques Climessences
-
-Pour améliorer les recommandations d'espèces forestières, il est recommandé d'intégrer les données climatiques du projet Climessences de l'ONF. Ces données permettent:
-
-- D'évaluer la compatibilité climatique actuelle et future des essences
-- De prendre en compte les scénarios de changement climatique
-- De recommander des espèces adaptées aux conditions futures
-
-L'intégration pourrait se faire dans:
-1. Un nouveau module `climate_analyzer.py` dans les services de terrain
-2. Une extension du calculateur de potentiel dans le BDTopoLoader
 
 ## Licence
 
