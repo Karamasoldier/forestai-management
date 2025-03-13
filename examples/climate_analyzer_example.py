@@ -6,7 +6,8 @@ Cet exemple montre comment:
 1. Initialiser l'analyseur climatique
 2. Obtenir des informations sur une zone climatique
 3. Recommander des espèces adaptées au climat actuel et futur
-4. Intégrer l'analyse climatique avec le GeoAgent
+4. Comparer les recommandations entre différents scénarios climatiques
+5. Intégrer l'analyse climatique avec le GeoAgent
 """
 
 import os
@@ -21,7 +22,7 @@ import geopandas as gpd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Importer le module d'analyse climatique
-from forestai.core.domain.services.climate_analyzer import ClimateAnalyzer
+from forestai.core.domain.services import ClimateAnalyzer
 from forestai.core.utils.logging_config import LoggingConfig
 
 def setup_logging():
@@ -48,16 +49,9 @@ def create_test_geometry():
     
     return geometry
 
-def example_basic_climate_analysis():
+def example_basic_climate_analysis(analyzer, geometry):
     """Exemple d'analyse climatique de base pour une parcelle."""
     print("\n=== Exemple d'analyse climatique de base ===")
-    
-    # Initialiser l'analyseur climatique
-    analyzer = ClimateAnalyzer()
-    print("Analyseur climatique initialisé")
-    
-    # Créer une géométrie de test
-    geometry = create_test_geometry()
     
     # Obtenir la zone climatique
     climate_zone = analyzer.get_climate_zone(geometry)
@@ -69,7 +63,7 @@ def example_basic_climate_analysis():
     print(f"Jours de sécheresse estivale: {climate_zone['summer_drought_days']}")
     print(f"Jours de gel: {climate_zone['frost_days']}")
     
-    return analyzer, geometry
+    return climate_zone
 
 def example_species_recommendations(analyzer, geometry):
     """Exemple de recommandation d'espèces adaptées."""
@@ -97,6 +91,67 @@ def example_species_recommendations(analyzer, geometry):
         print(f"   - Compatibilité: {rec['compatibility']}")
     
     return current_recommendations, future_recommendations
+
+def example_scenario_comparison(analyzer, geometry):
+    """Exemple de comparaison entre différents scénarios climatiques."""
+    print("\n=== Exemple de comparaison entre scénarios climatiques ===")
+    
+    # Comparer les scénarios
+    scenarios = ["current", "2050_rcp45", "2050_rcp85"]
+    comparison = analyzer.compare_scenarios(geometry, scenarios)
+    
+    # Afficher les différences de recommandations
+    print("Comparaison des espèces recommandées par scénario:")
+    
+    for scenario in scenarios:
+        print(f"\nScénario: {scenario}")
+        if f"{scenario}_info" in comparison:
+            info = comparison[f"{scenario}_info"]
+            print(f"Description: {info.get('description', 'Inconnu')}")
+        
+        recommendations = comparison[scenario]
+        for i, rec in enumerate(recommendations[:2], 1):
+            print(f"{i}. {rec['species_name']} ({rec['common_name']}) - Score: {rec['global_score']}")
+    
+    # Identifier les espèces robustes au changement climatique
+    print("\nEspèces robustes au changement climatique (recommandées dans tous les scénarios):")
+    
+    # Extraire les espèces de chaque scénario
+    species_by_scenario = {
+        scenario: [rec["species_name"] for rec in comparison[scenario]] 
+        for scenario in scenarios
+    }
+    
+    # Trouver les espèces présentes dans tous les scénarios
+    robust_species = set(species_by_scenario[scenarios[0]])
+    for scenario in scenarios[1:]:
+        robust_species = robust_species.intersection(set(species_by_scenario[scenario]))
+    
+    for species in robust_species:
+        print(f"- {species}")
+    
+    return comparison
+
+def example_risk_filtering(analyzer, recommendations):
+    """Exemple de filtrage des recommandations par risques."""
+    print("\n=== Exemple de filtrage par risques ===")
+    
+    # Filtrer les espèces sensibles à la sécheresse et au feu
+    excluded_risks = ["drought", "fire"]
+    print(f"Filtrage des espèces sensibles à: {', '.join(excluded_risks)}")
+    
+    filtered_recommendations = analyzer.filter_recommendations_by_risks(
+        recommendations, excluded_risks
+    )
+    
+    print(f"Espèces avant filtrage: {len(recommendations)}")
+    print(f"Espèces après filtrage: {len(filtered_recommendations)}")
+    
+    for i, rec in enumerate(filtered_recommendations[:3], 1):
+        print(f"{i}. {rec['species_name']} ({rec['common_name']})")
+        print(f"   - Risques: {rec['risks']}")
+    
+    return filtered_recommendations
 
 def example_integration_with_bdtopo_loader():
     """Exemple d'intégration avec le BDTopoLoader."""
@@ -168,11 +223,24 @@ def main():
     logger.info("Démarrage des exemples d'analyse climatique")
     
     try:
+        # Initialiser l'analyseur climatique
+        analyzer = ClimateAnalyzer()
+        print("Analyseur climatique initialisé")
+        
+        # Créer une géométrie de test
+        geometry = create_test_geometry()
+        
         # Exemple d'analyse climatique de base
-        analyzer, geometry = example_basic_climate_analysis()
+        climate_zone = example_basic_climate_analysis(analyzer, geometry)
         
         # Exemple de recommandation d'espèces
         current_recommendations, future_recommendations = example_species_recommendations(analyzer, geometry)
+        
+        # Exemple de comparaison entre scénarios
+        comparison = example_scenario_comparison(analyzer, geometry)
+        
+        # Exemple de filtrage par risques
+        filtered_recommendations = example_risk_filtering(analyzer, current_recommendations)
         
         # Exemple d'intégration avec le BDTopoLoader
         example_integration_with_bdtopo_loader()
