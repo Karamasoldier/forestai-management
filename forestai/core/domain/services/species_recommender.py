@@ -1,147 +1,160 @@
 """
-Module de recommandation d'espèces forestières adaptées au climat.
+Module de recommandation d'espèces forestières.
 
-S'occupe de calculer les scores des espèces et de les recommander
-selon différents critères.
+Ce module est responsable de la recommandation d'espèces adaptées
+au climat actuel et futur pour une zone climatique donnée.
 """
 
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
+import pandas as pd
 
 class SpeciesRecommender:
     """
-    Recommandeur d'espèces forestières adaptées au changement climatique.
+    Recommandeur d'espèces forestières adaptées aux zones climatiques.
     
-    Fonctionnalités:
-    - Calcul des scores de compatibilité
-    - Recommandation d'espèces selon critères multiples
-    - Tri et classement des recommandations
+    Responsabilités:
+    - Filtrer les espèces compatibles avec une zone et un scénario
+    - Calculer les scores pour prioriser les recommandations
+    - Filtrer les espèces en fonction des risques
     """
     
-    def __init__(self, species_compatibility: Dict[str, Any]):
+    def __init__(self, species_compatibility: Dict[str, Dict[str, Any]]):
         """
         Initialise le recommandeur d'espèces.
         
         Args:
-            species_compatibility: Dictionnaire contenant les données de compatibilité des espèces
+            species_compatibility: Dictionnaire des espèces et leur compatibilité avec les zones climatiques
+                                  Format: {"Species name": {"common_name": "Nom commun", "climate_compatibility": {...}, "risks": {...}, ...}}
         """
         self.logger = logging.getLogger(__name__)
         self.species_compatibility = species_compatibility
+        
+        # Constantes pour le calcul des scores
+        self.COMPATIBILITY_SCORES = {
+            "optimal": 1.0,   # Compatibilité optimale
+            "suitable": 0.7,  # Compatibilité bonne
+            "marginal": 0.4,  # Compatibilité marginale
+            "unsuitable": 0.0 # Compatibilité nulle
+        }
+        
+        self.RISK_SCORES = {
+            "low": 0.9,     # Risque faible
+            "medium": 0.6,  # Risque moyen
+            "high": 0.3     # Risque élevé
+        }
+        
+        self.VALUE_SCORES = {
+            "low": 0.3,     # Valeur faible
+            "medium": 0.6,  # Valeur moyenne
+            "high": 0.9     # Valeur élevée
+        }
+        
+        self.GROWTH_RATE_SCORES = {
+            "slow": 0.5,    # Croissance lente
+            "medium": 0.7,  # Croissance moyenne
+            "fast": 0.9     # Croissance rapide
+        }
+        
+        # Poids par défaut pour les critères
+        self.DEFAULT_CRITERIA = {
+            "compatibility": 1.0,      # Compatibilité climatique
+            "economic_value": 0.7,     # Valeur économique
+            "ecological_value": 0.7,   # Valeur écologique
+            "growth_rate": 0.6,        # Vitesse de croissance
+            "risk_drought": 0.8,       # Résistance à la sécheresse
+            "risk_frost": 0.7,         # Résistance au gel
+            "risk_fire": 0.6,          # Résistance au feu
+            "risk_pests": 0.5          # Résistance aux parasites
+        }
+        
+        self.logger.info(f"SpeciesRecommender initialisé avec {len(species_compatibility)} espèces")
     
-    def get_compatible_species(self, zone_id: str, 
-                              scenario: str = "current") -> Dict[str, Dict[str, Any]]:
+    def get_compatible_species(self, zone_id: str, scenario: str = "current") -> Dict[str, Dict[str, Any]]:
         """
-        Retourne la compatibilité des espèces pour une zone climatique et un scénario donnés.
+        Retourne les espèces compatibles avec une zone climatique et un scénario donnés.
         
         Args:
             zone_id: Identifiant de la zone climatique
             scenario: Scénario climatique à utiliser (défaut: climat actuel)
             
         Returns:
-            Dictionnaire des espèces avec leur compatibilité
+            Dictionnaire des espèces avec leur compatibilité pour la zone et le scénario
         """
-        try:
-            compatible_species = {}
-            
-            for species_name, species_data in self.species_compatibility.items():
-                if zone_id in species_data["climate_compatibility"]:
-                    zone_compat = species_data["climate_compatibility"][zone_id]
-                    
-                    if scenario in zone_compat:
-                        compatibility = zone_compat[scenario]
-                        
-                        # Ajouter l'espèce au dictionnaire résultat
-                        compatible_species[species_name] = {
-                            "common_name": species_data["common_name"],
-                            "compatibility": compatibility,
-                            "compatibility_score": self._compatibility_to_score(compatibility),
-                            "growth_rate": species_data["growth_rate"],
-                            "economic_value": species_data["economic_value"],
-                            "ecological_value": species_data["ecological_value"],
-                            "risks": species_data["risks"]
-                        }
-            
-            return compatible_species
-            
-        except Exception as e:
-            self.logger.error(f"Erreur lors de la récupération de la compatibilité des espèces: {str(e)}")
-            return {}
+        compatible_species = {}
+        
+        for species_name, species_data in self.species_compatibility.items():
+            # Vérifier si l'espèce a des données pour cette zone et ce scénario
+            if zone_id in species_data.get("climate_compatibility", {}) and \
+               scenario in species_data["climate_compatibility"][zone_id]:
+                
+                # Récupérer la compatibilité
+                compatibility = species_data["climate_compatibility"][zone_id][scenario]
+                
+                if compatibility != "unsuitable":
+                    # Copier les données de base
+                    compatible_species[species_name] = {
+                        "species_name": species_name,
+                        "common_name": species_data.get("common_name", ""),
+                        "compatibility": compatibility,
+                        "economic_value": species_data.get("economic_value", "medium"),
+                        "ecological_value": species_data.get("ecological_value", "medium"),
+                        "growth_rate": species_data.get("growth_rate", "medium"),
+                        "risks": species_data.get("risks", {})
+                    }
+        
+        self.logger.info(f"Trouvé {len(compatible_species)} espèces compatibles avec la zone {zone_id} pour le scénario {scenario}")
+        return compatible_species
     
-    def recommend_species(self, zone_id: str, 
-                         scenario: str = "current",
+    def recommend_species(self, zone_id: str, scenario: str = "current",
                          min_compatibility: str = "suitable",
                          criteria: Dict[str, float] = None) -> List[Dict[str, Any]]:
         """
-        Recommande des espèces adaptées pour une zone climatique et un scénario.
+        Recommande des espèces adaptées pour une zone climatique et un scénario donnés.
         
         Args:
             zone_id: Identifiant de la zone climatique
             scenario: Scénario climatique à utiliser
-            min_compatibility: Niveau minimal de compatibilité ("optimal", "suitable", "marginal")
-            criteria: Poids des critères pour le classement (economic_value, ecological_value, growth_rate)
+            min_compatibility: Niveau minimal de compatibilité (optimal, suitable, marginal)
+            criteria: Poids des critères pour le classement (défaut: self.DEFAULT_CRITERIA)
             
         Returns:
-            Liste des espèces recommandées avec leurs scores et détails
+            Liste des espèces recommandées avec leurs scores, triée par score décroissant
         """
         try:
-            # Obtenir la compatibilité des espèces
+            # Utiliser les critères par défaut si non spécifiés
+            if criteria is None:
+                criteria = self.DEFAULT_CRITERIA
+            
+            # Obtenir les espèces compatibles
             compatible_species = self.get_compatible_species(zone_id, scenario)
             
             # Filtrer par niveau minimal de compatibilité
-            min_score = self._compatibility_to_score(min_compatibility)
+            compatibility_levels = ["optimal", "suitable", "marginal"]
+            min_level_index = compatibility_levels.index(min_compatibility)
+            accepted_levels = compatibility_levels[:min_level_index + 1]
+            
             filtered_species = {
                 name: data for name, data in compatible_species.items()
-                if data["compatibility_score"] >= min_score
+                if data["compatibility"] in accepted_levels
             }
             
-            # Définir les critères de pondération par défaut
-            default_criteria = {
-                "economic_value": 0.4,
-                "ecological_value": 0.4,
-                "growth_rate": 0.2
-            }
-            
-            # Utiliser les critères fournis ou les critères par défaut
-            criteria = criteria or default_criteria
-            
-            # Calculer le score global pour chaque espèce
-            recommendations = []
-            
-            for species_name, data in filtered_species.items():
-                # Convertir les valeurs textuelles en scores numériques
-                value_scores = {
-                    "economic_value": self._value_to_score(data["economic_value"]),
-                    "ecological_value": self._value_to_score(data["ecological_value"]),
-                    "growth_rate": self._value_to_score(data["growth_rate"])
-                }
+            # Calculer les scores pour chaque espèce
+            scored_species = []
+            for species_name, species_data in filtered_species.items():
+                score = self._calculate_score(species_data, criteria)
                 
-                # Calculer le score global pondéré
-                global_score = (
-                    data["compatibility_score"] * 0.6 +
-                    value_scores["economic_value"] * criteria.get("economic_value", 0.4) * 0.4 +
-                    value_scores["ecological_value"] * criteria.get("ecological_value", 0.4) * 0.4 +
-                    value_scores["growth_rate"] * criteria.get("growth_rate", 0.2) * 0.4
-                )
+                # Ajouter le score au dictionnaire
+                species_data["global_score"] = round(score, 2)
                 
-                # Créer l'objet de recommandation
-                recommendation = {
-                    "species_name": species_name,
-                    "common_name": data["common_name"],
-                    "global_score": round(global_score, 2),
-                    "compatibility": data["compatibility"],
-                    "compatibility_score": data["compatibility_score"],
-                    "economic_value": data["economic_value"],
-                    "ecological_value": data["ecological_value"],
-                    "growth_rate": data["growth_rate"],
-                    "risks": data["risks"]
-                }
-                
-                recommendations.append(recommendation)
+                # Ajouter l'espèce à la liste
+                scored_species.append(species_data)
             
-            # Trier par score global décroissant
-            sorted_recommendations = sorted(recommendations, key=lambda x: x["global_score"], reverse=True)
+            # Trier par score décroissant
+            sorted_species = sorted(scored_species, key=lambda x: x["global_score"], reverse=True)
             
-            return sorted_recommendations
+            self.logger.info(f"Généré {len(sorted_species)} recommandations pour la zone {zone_id}, scénario {scenario}")
+            return sorted_species
             
         except Exception as e:
             self.logger.error(f"Erreur lors de la recommandation d'espèces: {str(e)}")
@@ -154,7 +167,7 @@ class SpeciesRecommender:
         
         Args:
             recommendations: Liste des recommandations à filtrer
-            excluded_risks: Liste des risques à éviter (drought, frost, fire)
+            excluded_risks: Liste des risques à éviter ("drought", "frost", "fire")
             
         Returns:
             Liste filtrée des recommandations
@@ -162,60 +175,173 @@ class SpeciesRecommender:
         if not excluded_risks:
             return recommendations
         
-        filtered = []
-        for rec in recommendations:
-            risks = rec.get("risks", {})
-            
-            # Vérifier si l'espèce a des risques élevés parmi ceux à éviter
+        filtered_recommendations = []
+        
+        for recommendation in recommendations:
             exclude = False
+            risks = recommendation.get("risks", {})
+            
             for risk in excluded_risks:
-                if risk in risks and risks[risk] in ["high", "very high"]:
+                if risk in risks and risks[risk] == "high":
                     exclude = True
                     break
             
             if not exclude:
-                filtered.append(rec)
+                filtered_recommendations.append(recommendation)
         
-        return filtered
+        self.logger.info(f"Filtré {len(recommendations) - len(filtered_recommendations)} espèces à risque élevé pour: {', '.join(excluded_risks)}")
+        return filtered_recommendations
     
-    def _compatibility_to_score(self, compatibility: str) -> float:
+    def get_species_details(self, species_name: str) -> Dict[str, Any]:
         """
-        Convertit un niveau de compatibilité textuel en score numérique.
+        Récupère les détails d'une espèce spécifique.
         
         Args:
-            compatibility: Niveau de compatibilité ("optimal", "suitable", "marginal", "unsuitable")
+            species_name: Nom de l'espèce
             
         Returns:
-            Score de compatibilité entre 0 et 1
+            Détails de l'espèce ou dictionnaire vide si non trouvée
         """
-        compatibility_scores = {
-            "optimal": 1.0,
-            "suitable": 0.7,
-            "marginal": 0.3,
-            "unsuitable": 0.0
-        }
-        
-        return compatibility_scores.get(compatibility.lower(), 0.0)
+        if species_name in self.species_compatibility:
+            return self.species_compatibility[species_name]
+        else:
+            self.logger.warning(f"Espèce non trouvée: {species_name}")
+            return {}
     
-    def _value_to_score(self, value: str) -> float:
+    def get_all_species_names(self) -> List[str]:
         """
-        Convertit une valeur textuelle en score numérique.
+        Récupère la liste de toutes les espèces disponibles.
+        
+        Returns:
+            Liste des noms d'espèces
+        """
+        return list(self.species_compatibility.keys())
+    
+    def get_tolerance_ranking(self, risk_type: str, zone_id: str = None, 
+                            scenario: str = "current") -> List[Dict[str, Any]]:
+        """
+        Classe les espèces selon leur tolérance à un risque spécifique.
         
         Args:
-            value: Valeur textuelle ("very low", "low", "medium", "high", "very high" ou équivalents)
+            risk_type: Type de risque ("drought", "frost", "fire", "pests")
+            zone_id: Identifiant de la zone climatique (optionnel)
+            scenario: Scénario climatique (si zone_id est spécifié)
             
         Returns:
-            Score entre 0 et 1
+            Liste des espèces classées par tolérance décroissante au risque
         """
-        value_scores = {
-            "very low": 0.1,
-            "low": 0.3,
-            "medium": 0.5,
-            "high": 0.8,
-            "very high": 1.0,
-            "slow": 0.3,  # Pour growth_rate
-            "medium": 0.5,  # Pour growth_rate
-            "fast": 0.8    # Pour growth_rate
-        }
+        try:
+            species_list = []
+            
+            # Filtrer par compatibilité si zone_id est spécifié
+            if zone_id:
+                species_data = self.get_compatible_species(zone_id, scenario)
+            else:
+                species_data = {
+                    name: {"species_name": name, "common_name": data.get("common_name", ""), "risks": data.get("risks", {})}
+                    for name, data in self.species_compatibility.items()
+                }
+            
+            # Préparer la liste avec les scores de tolérance
+            for name, data in species_data.items():
+                risk_score = 0.0
+                
+                if "risks" in data and risk_type in data["risks"]:
+                    risk_level = data["risks"][risk_type]
+                    if isinstance(risk_level, str):  # Si c'est un niveau (low, medium, high)
+                        risk_score = self.RISK_SCORES.get(risk_level, 0.0)
+                
+                species_list.append({
+                    "species_name": name,
+                    "common_name": data.get("common_name", ""),
+                    "risk_level": data.get("risks", {}).get(risk_type, "unknown"),
+                    "tolerance_score": risk_score
+                })
+            
+            # Trier par score de tolérance décroissant
+            sorted_species = sorted(species_list, key=lambda x: x["tolerance_score"], reverse=True)
+            
+            return sorted_species
+            
+        except Exception as e:
+            self.logger.error(f"Erreur lors du classement par tolérance aux risques: {str(e)}")
+            return []
+    
+    def _calculate_score(self, species_data: Dict[str, Any], criteria: Dict[str, float]) -> float:
+        """
+        Calcule le score global pour une espèce en fonction des critères.
         
-        return value_scores.get(value.lower(), 0.5)
+        Args:
+            species_data: Données de l'espèce
+            criteria: Poids des critères pour le calcul du score
+            
+        Returns:
+            Score global entre 0 et 1
+        """
+        score = 0.0
+        total_weight = 0.0
+        
+        # Score de compatibilité climatique
+        compatibility = species_data.get("compatibility", "unsuitable")
+        compatibility_score = self.COMPATIBILITY_SCORES.get(compatibility, 0.0)
+        compatibility_weight = criteria.get("compatibility", 1.0)
+        
+        score += compatibility_score * compatibility_weight
+        total_weight += compatibility_weight
+        
+        # Score économique
+        economic_value = species_data.get("economic_value", "medium")
+        economic_score = self.VALUE_SCORES.get(economic_value, 0.5)
+        economic_weight = criteria.get("economic_value", 0.7)
+        
+        score += economic_score * economic_weight
+        total_weight += economic_weight
+        
+        # Score écologique
+        ecological_value = species_data.get("ecological_value", "medium")
+        ecological_score = self.VALUE_SCORES.get(ecological_value, 0.5)
+        ecological_weight = criteria.get("ecological_value", 0.7)
+        
+        score += ecological_score * ecological_weight
+        total_weight += ecological_weight
+        
+        # Score de croissance
+        growth_rate = species_data.get("growth_rate", "medium")
+        growth_score = self.GROWTH_RATE_SCORES.get(growth_rate, 0.5)
+        growth_weight = criteria.get("growth_rate", 0.6)
+        
+        score += growth_score * growth_weight
+        total_weight += growth_weight
+        
+        # Scores de risques
+        risks = species_data.get("risks", {})
+        
+        # Sécheresse
+        if "drought" in risks:
+            drought_score = self.RISK_SCORES.get(risks["drought"], 0.5)
+            drought_weight = criteria.get("risk_drought", 0.8)
+            
+            score += drought_score * drought_weight
+            total_weight += drought_weight
+        
+        # Gel
+        if "frost" in risks:
+            frost_score = self.RISK_SCORES.get(risks["frost"], 0.5)
+            frost_weight = criteria.get("risk_frost", 0.7)
+            
+            score += frost_score * frost_weight
+            total_weight += frost_weight
+        
+        # Feu
+        if "fire" in risks:
+            fire_score = self.RISK_SCORES.get(risks["fire"], 0.5)
+            fire_weight = criteria.get("risk_fire", 0.6)
+            
+            score += fire_score * fire_weight
+            total_weight += fire_weight
+        
+        # Normaliser le score
+        if total_weight > 0:
+            return score / total_weight
+        else:
+            return 0.0
