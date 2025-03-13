@@ -1,23 +1,23 @@
 """
 Module d'analyse des zones climatiques.
 
-S'occupe d'identifier la zone climatique correspondant à une géométrie donnée.
+Ce module est responsable de l'identification des zones climatiques
+correspondant à une géométrie donnée.
 """
 
 import logging
-import pandas as pd
+from typing import Dict, Any, Union, Optional, List
 import geopandas as gpd
-from typing import Dict, Any, Union
+import pandas as pd
 from shapely.geometry import Polygon, Point, shape
 
 class ClimateZoneAnalyzer:
     """
-    Analyseur de zones climatiques pour les géométries.
+    Analyseur de zones climatiques.
     
-    Fonctionnalités:
-    - Conversion et normalisation des géométries
-    - Identification des zones climatiques par intersection spatiale
-    - Calcul des distances aux zones climatiques pour les points hors zones
+    Responsabilités:
+    - Identifier la zone climatique correspondant à une géométrie
+    - Fournir des informations sur les caractéristiques climatiques de la zone
     """
     
     def __init__(self, climate_zones: gpd.GeoDataFrame):
@@ -29,118 +29,184 @@ class ClimateZoneAnalyzer:
         """
         self.logger = logging.getLogger(__name__)
         self.climate_zones = climate_zones
+        
+        # Vérifier que les zones climatiques ont un CRS valide
+        if self.climate_zones.crs is None:
+            self.logger.warning("Les zones climatiques n'ont pas de CRS défini, utilisation de EPSG:2154 (Lambert 93)")
+            self.climate_zones.set_crs("EPSG:2154", inplace=True)
+        
+        self.logger.info(f"ClimateZoneAnalyzer initialisé avec {len(climate_zones)} zones climatiques")
     
     def get_climate_zone(self, geometry: Union[dict, gpd.GeoDataFrame, Polygon, Point]) -> Dict[str, Any]:
         """
-        Identifie la zone climatique correspondant à une géométrie donnée.
+        Identifie la zone climatique qui contient la géométrie donnée.
         
         Args:
             geometry: Géométrie à analyser (GeoJSON, GeoDataFrame, Polygon ou Point)
             
         Returns:
-            Dictionnaire contenant les informations de la zone climatique
+            Dictionnaire contenant les informations de la zone climatique identifiée
+            Retourne un dictionnaire vide si aucune zone ne correspond
         """
         try:
-            # Conversion de la géométrie en objet shapely
-            geom = self._convert_to_shapely(geometry)
+            # Convertir la géométrie en format standardisé
+            geom = self._standardize_geometry(geometry)
             
-            # Conversion en point si nécessaire (centroïde pour les polygones)
-            point = self._convert_to_point(geom)
+            if geom is None:
+                self.logger.error("Impossible de standardiser la géométrie fournie")
+                return {}
             
-            # Création d'un GeoDataFrame avec le point
-            point_gdf = gpd.GeoDataFrame(geometry=[point], crs=self.climate_zones.crs)
+            # Trouver la zone climatique qui contient ce point ou cette géométrie
+            # Pour une géométrie complexe (polygone), on utilise le centroïde
+            if isinstance(geom, Polygon):
+                point = geom.centroid
+                self.logger.info(f"Utilisation du centroïde ({point.x:.1f}, {point.y:.1f}) pour l'identification de la zone")
+            else:
+                point = geom
             
-            # Recherche de la zone climatique par intersection spatiale
-            zone_data = self._find_climate_zone(point_gdf)
+            # Recherche de la zone climatique
+            zone_index = self.climate_zones.sindex.query(point, predicate="contains")
             
-            return zone_data
-        
+            if len(zone_index) == 0:
+                # Si aucune correspondance exacte, trouver la zone la plus proche
+                self.logger.info("Aucune zone ne contient directement la géométrie, recherche de la zone la plus proche")
+                distances = self.climate_zones.geometry.distance(point)
+                closest_idx = distances.idxmin()
+                
+                zone = self.climate_zones.iloc[closest_idx]
+                result = self._zone_to_dict(zone)
+                result["distance"] = distances.min()
+                result["exact_match"] = False
+                
+                self.logger.info(f"Zone la plus proche identifiée: {result['name']} (distance: {result['distance']:.1f}m)")
+                return result
+            else:
+                # Zone correspondante trouvée
+                zone = self.climate_zones.iloc[zone_index[0]]
+                result = self._zone_to_dict(zone)
+                result["exact_match"] = True
+                
+                self.logger.info(f"Zone climatique identifiée: {result['name']}")
+                return result
+                
         except Exception as e:
-            self.logger.error(f"Erreur lors de la recherche de la zone climatique: {str(e)}")
-            return {
-                'id': None,
-                'name': "Inconnu",
-                'climate_type': "Inconnu",
-                'exact_match': False,
-                'error': str(e)
-            }
+            self.logger.error(f"Erreur lors de l'identification de la zone climatique: {str(e)}")
+            return {}
     
-    def _convert_to_shapely(self, geometry):
+    def get_all_zones(self) -> List[Dict[str, Any]]:
         """
-        Convertit une géométrie en objet shapely.
+        Retourne toutes les zones climatiques disponibles.
+        
+        Returns:
+            Liste des zones climatiques avec leurs informations
+        """
+        zones = []
+        for _, row in self.climate_zones.iterrows():
+            zones.append(self._zone_to_dict(row))
+        
+        return zones
+    
+    def get_zone_by_id(self, zone_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Recherche une zone climatique par son identifiant.
         
         Args:
-            geometry: Géométrie à convertir (dict, GeoDataFrame, Polygon, Point)
+            zone_id: Identifiant de la zone climatique
             
         Returns:
-            Objet géométrique shapely
+            Informations sur la zone climatique ou None si non trouvée
         """
-        if isinstance(geometry, dict):
-            return shape(geometry)
-        elif isinstance(geometry, gpd.GeoDataFrame):
-            return geometry.geometry.iloc[0]
-        else:
-            return geometry
+        try:
+            zone = self.climate_zones[self.climate_zones["id"] == zone_id]
+            if len(zone) == 0:
+                self.logger.warning(f"Aucune zone climatique trouvée avec l'ID '{zone_id}'")
+                return None
+            
+            return self._zone_to_dict(zone.iloc[0])
+        except Exception as e:
+            self.logger.error(f"Erreur lors de la recherche de la zone '{zone_id}': {str(e)}")
+            return None
     
-    def _convert_to_point(self, geom):
+    def get_zones_in_bounds(self, bbox: List[float]) -> List[Dict[str, Any]]:
         """
-        Convertit une géométrie en point (utilise le centroïde pour les polygones).
+        Récupère les zones climatiques dans une boîte englobante.
         
         Args:
-            geom: Géométrie à convertir
+            bbox: Boîte englobante [minx, miny, maxx, maxy]
             
         Returns:
-            Point
+            Liste des zones climatiques dans la boîte englobante
         """
-        if isinstance(geom, Polygon):
-            return geom.centroid
-        elif isinstance(geom, Point):
-            return geom
-        else:
-            return geom.centroid
+        try:
+            # Créer la géométrie de la boîte englobante
+            minx, miny, maxx, maxy = bbox
+            box = Polygon([
+                (minx, miny), (maxx, miny),
+                (maxx, maxy), (minx, maxy),
+                (minx, miny)
+            ])
+            
+            # Sélectionner les zones qui intersectent la boîte
+            intersecting = self.climate_zones[self.climate_zones.intersects(box)]
+            
+            zones = []
+            for _, row in intersecting.iterrows():
+                zones.append(self._zone_to_dict(row))
+            
+            self.logger.info(f"Trouvé {len(zones)} zones climatiques dans la boîte englobante")
+            return zones
+        except Exception as e:
+            self.logger.error(f"Erreur lors de la recherche de zones dans la boîte englobante: {str(e)}")
+            return []
     
-    def _find_climate_zone(self, point_gdf):
+    def _standardize_geometry(self, geometry: Union[dict, gpd.GeoDataFrame, Polygon, Point]) -> Optional[Union[Polygon, Point]]:
         """
-        Trouve la zone climatique par intersection spatiale.
+        Standardise la géométrie fournie en entrée.
         
         Args:
-            point_gdf: GeoDataFrame contenant le point à localiser
+            geometry: Géométrie à standardiser (GeoJSON, GeoDataFrame, Polygon ou Point)
             
         Returns:
-            Dictionnaire avec les données de la zone climatique
+            Géométrie standardisée (Polygon ou Point)
         """
-        # Recherche de la zone climatique par intersection spatiale
-        joined = gpd.sjoin(point_gdf, self.climate_zones, predicate='within', how='left')
-        
-        if joined.empty or pd.isna(joined.iloc[0]['id']):
-            # Si pas d'intersection, trouver la zone la plus proche
-            self.logger.warning("Point hors des zones climatiques connues, recherche de la zone la plus proche")
-            return self._find_nearest_zone(point_gdf.geometry.iloc[0])
-        else:
-            # Prendre les données de la zone trouvée
-            zone_data = joined.iloc[0].to_dict()
-            zone_data['exact_match'] = True
-            zone_data['distance_m'] = 0.0
+        try:
+            if isinstance(geometry, dict):
+                # GeoJSON
+                return shape(geometry)
             
-            return zone_data
+            elif isinstance(geometry, gpd.GeoDataFrame):
+                # GeoDataFrame
+                if len(geometry) == 0:
+                    self.logger.error("GeoDataFrame vide")
+                    return None
+                return geometry.geometry.iloc[0]
+            
+            elif isinstance(geometry, (Polygon, Point)):
+                # Déjà en format shapely
+                return geometry
+            
+            else:
+                self.logger.error(f"Format de géométrie non pris en charge: {type(geometry)}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Erreur de standardisation de la géométrie: {str(e)}")
+            return None
     
-    def _find_nearest_zone(self, point):
+    def _zone_to_dict(self, zone: gpd.GeoSeries) -> Dict[str, Any]:
         """
-        Trouve la zone climatique la plus proche d'un point.
+        Convertit une ligne de GeoDataFrame en dictionnaire.
         
         Args:
-            point: Point à localiser
+            zone: Ligne du GeoDataFrame représentant une zone climatique
             
         Returns:
-            Dictionnaire avec les données de la zone climatique la plus proche
+            Dictionnaire avec les informations de la zone climatique
         """
-        # Calculer la distance à chaque zone
-        distances = self.climate_zones.distance(point)
-        nearest_idx = distances.idxmin()
-        zone_data = self.climate_zones.iloc[nearest_idx].to_dict()
+        # Convertir toutes les propriétés de la zone en dictionnaire
+        result = {}
+        for col in self.climate_zones.columns:
+            if col != "geometry":  # Exclure la géométrie
+                result[col] = zone[col]
         
-        # Ajouter des informations sur la distance
-        zone_data['exact_match'] = False
-        zone_data['distance_m'] = float(distances.iloc[nearest_idx])
-        
-        return zone_data
+        return result
