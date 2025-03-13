@@ -73,7 +73,46 @@ Le projet inclut plusieurs chargeurs de données géospatiales optimisés pour d
 data_loaders/
 ├── cadastre_loader.py          # Données cadastrales (format local)
 ├── corine_land_cover_loader.py # Données d'occupation des sols (PostgreSQL)
-└── bdtopo_loader.py            # Données topographiques (format local)
+├── bdtopo_loader.py            # Données topographiques (format local)
+└── bdtopo/                     # Nouvelle version modulaire du BDTopoLoader
+    ├── base_loader.py          # Classe de base pour le chargement des données
+    ├── vegetation_analyzer.py  # Analyse de la végétation
+    ├── road_analyzer.py        # Analyse du réseau routier
+    ├── hydro_analyzer.py       # Analyse du réseau hydrographique
+    ├── building_analyzer.py    # Analyse des bâtiments
+    ├── potential_calculator.py # Calcul du potentiel forestier
+    └── main_loader.py          # Point d'entrée principal pour les utilisateurs
+```
+
+#### Loader BD TOPO
+
+Le `BDTopoLoader` est un nouveau loader modulaire pour les données BD TOPO de l'IGN. Il permet d'analyser:
+
+- La végétation (couverture, types dominants)
+- Le réseau routier (densité, accessibilité)
+- Le réseau hydrographique (cours d'eau, plans d'eau)
+- Les bâtiments (densité, types)
+
+Il calcule également un score de potentiel forestier basé sur l'ensemble de ces critères et génère des recommandations d'espèces adaptées au terrain.
+
+Exemple d'utilisation:
+```python
+from forestai.agents.geo_agent.data_loaders.bdtopo import BDTopoLoader
+
+# Initialiser le loader
+loader = BDTopoLoader(data_dir="data/raw/bdtopo")
+
+# Créer une géométrie (exemple avec un rectangle)
+from shapely.geometry import box
+geometry = box(843000, 6278000, 844000, 6279000)  # coordonnées Lambert 93
+
+# Analyser le potentiel forestier d'une parcelle
+potential = loader.calculate_forestry_potential(geometry, buffer_distance=100)
+
+print(f"Potentiel forestier: {potential['potential_score']} ({potential['potential_class']})")
+print(f"Contraintes: {potential['constraints']}")
+print(f"Opportunités: {potential['opportunities']}")
+print(f"Espèces recommandées: {potential['recommended_species']}")
 ```
 
 #### Loader Corine Land Cover SQL
@@ -204,6 +243,7 @@ Les exemples de logging sont disponibles dans les fichiers suivants :
 - `examples/geo_agent_v3_example.py` : Intégration avec le GeoAgent v3
 - `examples/terrain_services_example.py` : Utilisation des services de terrain modulaires
 - `examples/corine_land_cover_example.py` : Utilisation du loader Corine Land Cover SQL
+- `examples/bdtopo_loader_example.py` : Utilisation du loader BD TOPO modulaire
 
 ```bash
 # Exécuter les exemples
@@ -211,6 +251,7 @@ python examples/logging_example.py
 python examples/geo_agent_v3_example.py
 python examples/terrain_services_example.py
 python examples/corine_land_cover_example.py
+python examples/bdtopo_loader_example.py
 ```
 
 ## Agents et documentation
@@ -383,7 +424,7 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 4. **Chargement de Données**
    - [x] Implémentation des loaders pour données cadastrales
    - [x] Implémentation du loader pour Corine Land Cover (PostgreSQL)
-   - [ ] Implémentation des loaders pour BD TOPO
+   - [x] Implémentation des loaders pour BD TOPO
    - [ ] Tests d'intégration avec des données réelles
 
 5. **Délivrables Phase 2**
@@ -477,11 +518,12 @@ Le projet contient plusieurs exemples d'utilisation dans le dossier `examples/` 
 - `geo_agent_v3_example.py` : Illustre l'intégration du GeoAgent v3 avec l'infrastructure de logging.
 - `terrain_services_example.py` : Démontre l'utilisation des services de terrain modulaires et du coordinateur.
 - `corine_land_cover_example.py` : Montre comment utiliser le loader SQL pour les données Corine Land Cover.
+- `bdtopo_loader_example.py` : Montre comment utiliser le loader modulaire pour les données BD TOPO.
 
 Pour exécuter un exemple :
 
 ```bash
-python examples/terrain_services_example.py
+python examples/bdtopo_loader_example.py
 ```
 
 ## Prochaines étapes
@@ -489,19 +531,19 @@ python examples/terrain_services_example.py
 Les prochaines étapes prioritaires sont :
 
 1. **Finalisation de l'infrastructure géospatiale**
-   - Implémentation du loader pour BD TOPO
-   - Intégration du loader Corine Land Cover avec le TerrainCoordinator
-   - Tests d'intégration avec le dataset complet
+   - [x] Implémentation du loader pour BD TOPO
+   - [x] Intégration du loader Corine Land Cover avec le TerrainCoordinator
+   - [ ] Tests d'intégration avec le dataset complet
 
 2. **Développement du ReglementationAgent**
-   - Implémentation de RegulatoryFrameworkService
-   - Création d'une base de données des réglementations forestières par région
-   - Développement d'un moteur d'analyse de conformité
+   - [ ] Implémentation de RegulatoryFrameworkService
+   - [ ] Création d'une base de données des réglementations forestières par région
+   - [ ] Développement d'un moteur d'analyse de conformité
 
 3. **Extension des tests**
-   - Tests automatisés pour les services de terrain
-   - Tests d'intégration avec données réelles
-   - Tests de performances des analyses parallélisées
+   - [ ] Tests automatisés pour les services de terrain
+   - [ ] Tests d'intégration avec données réelles
+   - [ ] Tests de performances des analyses parallélisées
 
 ## Contributions
 
@@ -525,12 +567,24 @@ Les contributions sont les bienvenues. Voici comment contribuer :
 - [x] Modularisation des services de terrain
 - [x] Implémentation du coordinateur de terrain
 - [x] Implémentation du loader Corine Land Cover SQL
-- [ ] Services géospatiaux complets avec BD TOPO
+- [x] Services géospatiaux complets avec BD TOPO
 - [ ] Implémentation de l'agent de réglementation forestière
 - [ ] Implémentation de l'agent de subventions
 - [ ] Implémentation de l'agent de diagnostic
 - [ ] Interface utilisateur
 - [ ] Documentation finale et déploiement
+
+## Intégration des données climatiques Climessences
+
+Pour améliorer les recommandations d'espèces forestières, il est recommandé d'intégrer les données climatiques du projet Climessences de l'ONF. Ces données permettent:
+
+- D'évaluer la compatibilité climatique actuelle et future des essences
+- De prendre en compte les scénarios de changement climatique
+- De recommander des espèces adaptées aux conditions futures
+
+L'intégration pourrait se faire dans:
+1. Un nouveau module `climate_analyzer.py` dans les services de terrain
+2. Une extension du calculateur de potentiel dans le BDTopoLoader
 
 ## Licence
 
