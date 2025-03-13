@@ -42,6 +42,22 @@ Cette approche offre plusieurs avantages :
 - **Maintenance** : Code plus facile à maintenir et à tester
 - **Réutilisabilité** : Les services peuvent être utilisés indépendamment
 
+### Services de réglementation forestière
+
+Pour la gestion des réglementations forestières, une architecture en services a été mise en place :
+
+```
+domain/services/
+├── regulatory_framework_service.py   # Gestion du cadre réglementaire
+└── compliance_checker_service.py     # Vérification de conformité
+```
+
+Cette architecture offre :
+- **Séparation des responsabilités** : Chaque service a un rôle spécifique
+- **Réutilisabilité** : Les services peuvent être utilisés par différents agents
+- **Évolutivité** : Ajout facile de nouvelles réglementations
+- **Maintenabilité** : Code organisé par domaine fonctionnel
+
 ### Coordinateur de terrain
 
 Le coordinateur de terrain (`terrain_coordinator.py`) est un orchestrateur qui :
@@ -243,7 +259,8 @@ Les exemples de logging sont disponibles dans les fichiers suivants :
 - `examples/geo_agent_v3_example.py` : Intégration avec le GeoAgent v3
 - `examples/terrain_services_example.py` : Utilisation des services de terrain modulaires
 - `examples/corine_land_cover_example.py` : Utilisation du loader Corine Land Cover SQL
-- `examples/bdtopo_loader_example.py` : Utilisation du loader BD TOPO modulaire
+- `examples/bdtopo_loader_example.py` : Utilisation du loader modulaire pour les données BD TOPO
+- `examples/reglementation_agent_example.py` : Utilisation de l'agent de réglementation forestière
 
 ```bash
 # Exécuter les exemples
@@ -252,12 +269,13 @@ python examples/geo_agent_v3_example.py
 python examples/terrain_services_example.py
 python examples/corine_land_cover_example.py
 python examples/bdtopo_loader_example.py
+python examples/reglementation_agent_example.py
 ```
 
 ## Agents et documentation
 
 - [Agent de géotraitement (GeoAgent)](docs/GeoAgent.md)
-- [Agent de réglementation forestière](docs/ReglementationAgent.md)
+- [Agent de réglementation forestière (ReglementationAgent)](docs/ReglementationAgent.md)
 
 ## Utilisation
 
@@ -306,6 +324,10 @@ Encapsuler la logique métier complexe dans des services spécialisés utilisés
 # Exemple : ForestPotentialService utilisé par le GeoAgent
 forest_potential_service = ForestPotentialService(geo_data_repository, climate_repository)
 potential_score = forest_potential_service.analyze_parcel_potential(parcel_id)
+
+# Exemple : RegulatoryFrameworkService utilisé par le ReglementationAgent
+regulatory_service = RegulatoryFrameworkService(data_path)
+regulations = regulatory_service.get_regulations_by_project_type("boisement")
 ```
 
 ### 3. Interfaces de communication standardisées
@@ -437,8 +459,9 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
 
 1. **ReglementationAgent**
    - [x] Extraction des règles du Code Forestier
-   - [ ] Implémentation de RegulatoryFrameworkService
-   - [ ] Implémentation de ComplianceCheckerService
+   - [x] Implémentation de RegulatoryFrameworkService
+   - [x] Implémentation de ComplianceCheckerService
+   - [x] Génération de rapports de conformité
 
 2. **SubventionAgent**
    - [ ] Implémentation du crawler de subventions
@@ -450,9 +473,9 @@ Pour faire avancer le projet efficacement, nous suivrons ce workflow en 4 phases
    - [ ] Tests d'intégration ReglementationAgent ↔ SubventionAgent
 
 4. **Délivrables Phase 3**
-   - [ ] API de conformité réglementaire
+   - [x] API de conformité réglementaire
    - [ ] Base de données de subventions
-   - [ ] Générateur de rapports de conformité
+   - [x] Générateur de rapports de conformité
 
 ### Phase 4 : Diagnostic et Interface
 
@@ -519,12 +542,27 @@ Le projet contient plusieurs exemples d'utilisation dans le dossier `examples/` 
 - `terrain_services_example.py` : Démontre l'utilisation des services de terrain modulaires et du coordinateur.
 - `corine_land_cover_example.py` : Montre comment utiliser le loader SQL pour les données Corine Land Cover.
 - `bdtopo_loader_example.py` : Montre comment utiliser le loader modulaire pour les données BD TOPO.
+- `reglementation_agent_example.py` : Illustre l'utilisation de l'agent de réglementation pour vérifier la conformité des projets forestiers.
 
 Pour exécuter un exemple :
 
 ```bash
 python examples/bdtopo_loader_example.py
 ```
+
+## Fonctionnalités de l'agent de réglementation
+
+Le nouvel agent de réglementation (ReglementationAgent) propose :
+
+- **Vérification de conformité réglementaire** des projets forestiers
+- **Identification des autorisations nécessaires** pour différents types de projets
+- **Génération de rapports** détaillés aux formats JSON, TXT et HTML
+- **Recommandations de mise en conformité** avec actions concrètes
+- **Recherche de réglementations** par mots-clés
+- **Vérification des zones protégées** (zones humides, Natura 2000, etc.)
+- **Architecture modulaire** avec services de domaine spécifiques
+
+Pour plus de détails, consultez la [documentation de l'agent de réglementation](docs/ReglementationAgent.md).
 
 ## Prochaines étapes
 
@@ -535,15 +573,21 @@ Les prochaines étapes prioritaires sont :
    - [x] Intégration du loader Corine Land Cover avec le TerrainCoordinator
    - [ ] Tests d'intégration avec le dataset complet
 
-2. **Développement du ReglementationAgent**
-   - [ ] Implémentation de RegulatoryFrameworkService
-   - [ ] Création d'une base de données des réglementations forestières par région
-   - [ ] Développement d'un moteur d'analyse de conformité
+2. **Amélioration du ReglementationAgent**
+   - [x] Implémentation de RegulatoryFrameworkService
+   - [x] Implémentation de ComplianceCheckerService
+   - [ ] Intégration avec des bases de données réglementaires externes
+   - [ ] Extension à d'autres réglementations environnementales
 
-3. **Extension des tests**
+3. **Développement du SubventionAgent**
+   - [ ] Implémentation du crawler de subventions
+   - [ ] Système d'analyse d'éligibilité
+   - [ ] Générateur de dossiers de demande
+
+4. **Extension des tests**
    - [ ] Tests automatisés pour les services de terrain
-   - [ ] Tests d'intégration avec données réelles
-   - [ ] Tests de performances des analyses parallélisées
+   - [ ] Tests d'intégration entre agents
+   - [ ] Tests de performance des analyses parallélisées
 
 ## Contributions
 
@@ -568,7 +612,7 @@ Les contributions sont les bienvenues. Voici comment contribuer :
 - [x] Implémentation du coordinateur de terrain
 - [x] Implémentation du loader Corine Land Cover SQL
 - [x] Services géospatiaux complets avec BD TOPO
-- [ ] Implémentation de l'agent de réglementation forestière
+- [x] Implémentation de l'agent de réglementation forestière
 - [ ] Implémentation de l'agent de subventions
 - [ ] Implémentation de l'agent de diagnostic
 - [ ] Interface utilisateur
