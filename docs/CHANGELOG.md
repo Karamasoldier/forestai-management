@@ -31,6 +31,11 @@ Ce document répertorie les modifications importantes apportées au projet Fores
   - Enrichissement des données de projet avec analyses géospatiales
   - Utilisation des zones prioritaires pour la recherche de subventions
   - Exemple pratique d'intégration
+- Système de détection automatique des zones prioritaires pour subventions
+  - Service de détection des zones prioritaires
+  - Calcul de l'impact sur les subventions potentielles
+  - Recommandation de types de subventions adaptés
+  - Exemple d'utilisation avancée
 
 ### Amélioré
 - Interface en ligne de commande pour exécuter les agents
