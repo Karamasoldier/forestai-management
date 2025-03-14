@@ -1,11 +1,8 @@
 """
-Module pour l'agent de subventions forestières.
-
-Ce module contient les classes et fonctions nécessaires à l'analyse,
-l'identification et la génération de dossiers pour les subventions
-forestières disponibles.
+Module SubsidyAgent pour ForestAI.
+Agent de gestion des subventions forestières.
 """
 
-from .subsidy_agent import SubsidyAgent
+from forestai.agents.subsidy_agent.subsidy_agent import SubsidyAgent
 
-__all__ = ["SubsidyAgent"]
+__all__ = ['SubsidyAgent']
