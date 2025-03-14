@@ -15,7 +15,7 @@ Ce document répertorie les modifications importantes apportées au projet Fores
   - Module principal avec recherche et analyse d'éligibilité
   - Scrapers de subventions (BaseSubsidyScraper, FranceRelanceScraper)
   - Moteur d'analyse d'éligibilité avec règles avancées
-  - Générateurs de documents (PDF, HTML)
+  - Générateurs de documents (PDF, HTML, DOCX)
 - Système de cache pour les données de subventions
 - Exemple d'utilisation du SubsidyAgent
 
