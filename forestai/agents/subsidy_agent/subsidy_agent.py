@@ -1,672 +1,415 @@
 """
-Implémentation de l'agent de subventions forestières.
-
-Cet agent est responsable de la recherche, de l'analyse et de la génération
-de dossiers de subventions pour des projets forestiers.
+Module SubsidyAgent - Agent de gestion des subventions pour ForestAI.
 """
 
-import os
-import json
 import logging
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
+import uuid
+from typing import Dict, Any, List, Optional, Union
 
-from ..base_agent import BaseAgent
-from .scrapers.base_scraper import BaseSubsidyScraper
-from .scrapers.france_relance_scraper import FranceRelanceScraper
-from .document_generation.document_generator import SubsidyDocumentGenerator
+from forestai.core.domain.base_agent import BaseAgent
+from forestai.core.domain.services.subsidy_service import SubsidyService
+from forestai.core.communication.message_bus import Message
+from forestai.core.utils.logging_config import log_function
 
+logger = logging.getLogger(__name__)
 
 class SubsidyAgent(BaseAgent):
     """
-    Agent spécialisé dans la recherche et l'analyse des subventions forestières.
+    Agent de gestion des subventions pour la recherche, l'analyse d'éligibilité
+    et la génération de documents de demande.
     """
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Optional[Dict[str, Any]] = None, agent_id: Optional[str] = None,
+                 subscribe_topics: Optional[List[str]] = None):
         """
         Initialise l'agent de subventions.
         
         Args:
-            config: Dictionnaire de configuration contenant:
-                - data_dir: Chemin vers le répertoire de données
-                - output_dir: Chemin vers le répertoire de sortie
-                - cache_subsidies: Booléen indiquant si les subventions doivent être mises en cache
-                - cache_duration: Durée de validité du cache en jours
+            config: Configuration de l'agent (optionnel)
+            agent_id: Identifiant de l'agent (optionnel)
+            subscribe_topics: Liste des sujets auxquels s'abonner (optionnel)
         """
-        super().__init__("SubsidyAgent", config)
-        
-        # Configuration des chemins
-        self.data_dir = config.get("data_dir", "data")
-        self.output_dir = config.get("output_dir", "outputs")
-        self.cache_dir = os.path.join(self.data_dir, "cache", "subsidies")
-        self.cache_duration = config.get("cache_duration", 7)  # 7 jours par défaut
-        
-        # S'assurer que les répertoires existent
-        os.makedirs(self.cache_dir, exist_ok=True)
-        os.makedirs(self.output_dir, exist_ok=True)
-        
-        # Initialisation du cache
-        self.subsidies_cache = {}
-        self.cache_timestamp = None
-        self.use_cache = config.get("cache_subsidies", True)
-        
-        # Initialisation des scrapers
-        self.scrapers = []
-        self._initialize_scrapers()
-        
-        # Initialisation du générateur de documents
-        self.document_generator = SubsidyDocumentGenerator(
-            {"templates_dir": os.path.join(self.data_dir, "templates"),
-             "output_dir": self.output_dir}
-        )
-        
-        self.logger.info("SubsidyAgent initialisé")
-
-    def _initialize_scrapers(self) -> None:
-        """Initialise les scrapers de subventions."""
-        self.scrapers = [
-            FranceRelanceScraper()
+        # Sujets par défaut
+        default_topics = [
+            "SUBSIDIES_SEARCH_REQUESTED",
+            "ELIGIBILITY_ANALYSIS_REQUESTED",
+            "APPLICATION_GENERATION_REQUESTED",
+            "PARCEL_ANALYSIS_COMPLETED",  # Pour intégration avec GeoAgent
+            "PRIORITY_ZONE_DETECTION_COMPLETED"  # Pour intégration avec GeoAgent
         ]
-        self.logger.info(f"Scrapers initialisés: {len(self.scrapers)} scrapers disponibles")
-    
-    def _execute(self) -> None:
-        """
-        Implémentation de la logique d'exécution de l'agent.
-        """
-        self.logger.info("Exécution de l'agent de subventions")
         
-        # Traitement des tâches en attente
-        while self.is_running and self.tasks_queue:
-            task = self.tasks_queue.pop(0)
-            self.logger.info(f"Traitement de la tâche: {task.get('type', 'unknown')}")
+        # Combiner les sujets par défaut et les sujets spécifiés
+        all_topics = list(set(default_topics + (subscribe_topics or [])))
+        
+        # Initialiser la classe parent
+        super().__init__(config, agent_id, all_topics)
+        
+        # Initialiser le service de subventions
+        self.subsidy_service = SubsidyService(self.config.as_dict())
+        
+        # Cache des résultats d'analyse de parcelles
+        self.parcel_analysis_cache = {}
+        self.priority_zone_cache = {}
+        
+        logger.info(f"SubsidyAgent initialized: {self.agent_id}")
+    
+    @log_function
+    def handle_message(self, message: Message) -> None:
+        """
+        Gère les messages reçus.
+        
+        Args:
+            message: Message reçu
+        """
+        topic = message.topic
+        data = message.data
+        
+        logger.info(f"SubsidyAgent handling message: {topic}")
+        
+        if topic == "SUBSIDIES_SEARCH_REQUESTED":
+            # Rechercher des subventions
+            project_type = data.get("project_type")
+            region = data.get("region")
+            owner_type = data.get("owner_type")
+            priority_zones = data.get("priority_zones")
             
             try:
-                self._process_task(task)
+                subsidies = self.subsidy_service.search_subsidies(
+                    project_type=project_type,
+                    region=region,
+                    owner_type=owner_type,
+                    priority_zones=priority_zones
+                )
+                
+                # Publier le résultat
+                self.publish_message("SUBSIDIES_SEARCH_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "subsidies": subsidies,
+                    "status": "success"
+                })
             except Exception as e:
-                self.logger.error(f"Erreur lors du traitement de la tâche: {e}", exc_info=True)
-    
-    def _process_task(self, task: Dict[str, Any]) -> None:
-        """
-        Traite une tâche spécifique.
+                logger.exception(f"Error searching subsidies: {str(e)}")
+                
+                # Publier l'erreur
+                self.publish_message("SUBSIDIES_SEARCH_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "status": "error",
+                    "error_message": str(e)
+                })
         
-        Args:
-            task: Dictionnaire contenant les informations de la tâche
-        """
-        task_type = task.get("type")
-        
-        if task_type == "search_subsidies":
-            self._handle_search_subsidies(task)
-        elif task_type == "analyze_eligibility":
-            self._handle_analyze_eligibility(task)
-        elif task_type == "generate_documents":
-            self._handle_generate_documents(task)
-        elif task_type == "refresh_cache":
-            self._handle_refresh_cache()
-        else:
-            self.logger.warning(f"Type de tâche inconnu: {task_type}")
-    
-    def _handle_search_subsidies(self, task: Dict[str, Any]) -> None:
-        """
-        Recherche les subventions selon les critères spécifiés.
-        
-        Args:
-            task: Tâche contenant les critères de recherche
-        """
-        project_type = task.get("project_type")
-        region = task.get("region")
-        owner_type = task.get("owner_type", "all")
-        
-        self.logger.info(f"Recherche de subventions pour: projet={project_type}, région={region}, propriétaire={owner_type}")
-        
-        # Récupérer les subventions (du cache ou via les scrapers)
-        subsidies = self.search_subsidies(
-            project_type=project_type,
-            region=region,
-            owner_type=owner_type
-        )
-        
-        # Stocker les résultats dans le dictionnaire de résultats de la tâche
-        task["results"] = {
-            "subsidies": subsidies,
-            "count": len(subsidies),
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        self.logger.info(f"Recherche terminée: {len(subsidies)} subventions trouvées")
-    
-    def _handle_analyze_eligibility(self, task: Dict[str, Any]) -> None:
-        """
-        Analyse l'éligibilité d'un projet aux subventions.
-        
-        Args:
-            task: Tâche contenant les informations du projet
-        """
-        project = task.get("project", {})
-        subsidy_id = task.get("subsidy_id")
-        
-        self.logger.info(f"Analyse d'éligibilité pour le projet: {project.get('type')} (subvention {subsidy_id})")
-        
-        # Analyser l'éligibilité du projet
-        eligibility = self.analyze_eligibility(project, subsidy_id)
-        
-        # Stocker les résultats
-        task["results"] = eligibility
-        
-        self.logger.info(f"Analyse d'éligibilité terminée: {'éligible' if eligibility['eligible'] else 'non éligible'}")
-    
-    def _handle_generate_documents(self, task: Dict[str, Any]) -> None:
-        """
-        Génère les documents de demande de subvention.
-        
-        Args:
-            task: Tâche contenant les informations pour la génération de documents
-        """
-        project = task.get("project", {})
-        subsidy_id = task.get("subsidy_id")
-        applicant = task.get("applicant", {})
-        output_formats = task.get("output_formats", ["pdf"])
-        
-        self.logger.info(f"Génération de documents pour le projet: {project.get('type')} (subvention {subsidy_id})")
-        
-        # Générer les documents
-        document_paths = self.generate_application_documents(
-            project=project,
-            subsidy_id=subsidy_id,
-            applicant=applicant,
-            output_formats=output_formats
-        )
-        
-        # Stocker les résultats
-        task["results"] = {
-            "document_paths": document_paths,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        self.logger.info(f"Génération de documents terminée: {len(document_paths)} documents générés")
-    
-    def _handle_refresh_cache(self) -> None:
-        """Rafraîchit le cache de subventions."""
-        self.logger.info("Rafraîchissement du cache de subventions")
-        
-        # Forcer le rechargement des subventions en ignorant le cache
-        all_subsidies = self._fetch_all_subsidies(ignore_cache=True)
-        
-        self.logger.info(f"Cache rafraîchi: {len(all_subsidies)} subventions mises en cache")
-    
-    def search_subsidies(
-        self, 
-        project_type: Optional[str] = None, 
-        region: Optional[str] = None, 
-        owner_type: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
-        """
-        Recherche des subventions selon les critères spécifiés.
-        
-        Args:
-            project_type: Type de projet forestier (reboisement, boisement, etc.)
-            region: Région administrative
-            owner_type: Type de propriétaire (privé, public, etc.)
+        elif topic == "ELIGIBILITY_ANALYSIS_REQUESTED":
+            # Analyser l'éligibilité
+            project = data.get("project", {})
+            subsidy_id = data.get("subsidy_id")
             
-        Returns:
-            Liste des subventions correspondant aux critères
-        """
-        # Récupérer toutes les subventions
-        all_subsidies = self._get_subsidies_from_cache_or_fetch()
-        
-        # Filtrer selon les critères
-        filtered_subsidies = all_subsidies
-        
-        if project_type:
-            filtered_subsidies = [
-                s for s in filtered_subsidies 
-                if project_type.lower() in [p.lower() for p in s.get("eligible_projects", [])]\
-                or "all" in [p.lower() for p in s.get("eligible_projects", [])]
-            ]
-        
-        if region:
-            filtered_subsidies = [
-                s for s in filtered_subsidies 
-                if (not s.get("regions") or 
-                    region.lower() in [r.lower() for r in s.get("regions", [])] or
-                    "national" in [r.lower() for r in s.get("regions", [])])
-            ]
-        
-        if owner_type and owner_type != "all":
-            filtered_subsidies = [
-                s for s in filtered_subsidies 
-                if (not s.get("eligible_owners") or 
-                    owner_type.lower() in [o.lower() for o in s.get("eligible_owners", [])] or
-                    "all" in [o.lower() for o in s.get("eligible_owners", [])])
-            ]
-        
-        return filtered_subsidies
-    
-    def _get_subsidies_from_cache_or_fetch(self) -> List[Dict[str, Any]]:
-        """
-        Récupère les subventions du cache ou à partir des scrapers.
-        
-        Returns:
-            Liste des subventions
-        """
-        # Vérifier si le cache est valide
-        cache_file = os.path.join(self.cache_dir, "subsidies.json")
-        
-        if self.use_cache and os.path.exists(cache_file):
-            cache_time = os.path.getmtime(cache_file)
-            cache_age_days = (datetime.now().timestamp() - cache_time) / (60 * 60 * 24)
-            
-            if cache_age_days < self.cache_duration:
-                try:
-                    with open(cache_file, "r", encoding="utf-8") as f:
-                        self.logger.info(f"Utilisation du cache de subventions (âge: {cache_age_days:.1f} jours)")
-                        return json.load(f)
-                except (json.JSONDecodeError, IOError) as e:
-                    self.logger.warning(f"Erreur lors de la lecture du cache: {e}")
-        
-        # Si on arrive ici, il faut rafraîchir le cache
-        return self._fetch_all_subsidies()
-    
-    def _fetch_all_subsidies(self, ignore_cache: bool = False) -> List[Dict[str, Any]]:
-        """
-        Récupère toutes les subventions à partir des scrapers et met à jour le cache.
-        
-        Args:
-            ignore_cache: Forcer le rechargement même si le cache est valide
-            
-        Returns:
-            Liste des subventions
-        """
-        self.logger.info("Récupération des subventions à partir des scrapers")
-        
-        all_subsidies = []
-        
-        # Récupérer les subventions de chaque scraper
-        for scraper in self.scrapers:
             try:
-                self.logger.info(f"Exécution du scraper: {scraper.name}")
-                subsidies = scraper.fetch_subsidies()
-                all_subsidies.extend(subsidies)
-                self.logger.info(f"Scraper {scraper.name}: {len(subsidies)} subventions récupérées")
+                eligibility = self.subsidy_service.analyze_eligibility(
+                    project=project,
+                    subsidy_id=subsidy_id
+                )
+                
+                # Publier le résultat
+                self.publish_message("ELIGIBILITY_ANALYSIS_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "subsidy_id": subsidy_id,
+                    "eligibility": eligibility,
+                    "status": "success"
+                })
             except Exception as e:
-                self.logger.error(f"Erreur lors de l'exécution du scraper {scraper.name}: {e}", exc_info=True)
+                logger.exception(f"Error analyzing eligibility: {str(e)}")
+                
+                # Publier l'erreur
+                self.publish_message("ELIGIBILITY_ANALYSIS_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "subsidy_id": subsidy_id,
+                    "status": "error",
+                    "error_message": str(e)
+                })
         
-        # Mettre à jour le cache
-        if self.use_cache:
-            cache_file = os.path.join(self.cache_dir, "subsidies.json")
+        elif topic == "APPLICATION_GENERATION_REQUESTED":
+            # Générer une demande de subvention
+            project = data.get("project", {})
+            subsidy_id = data.get("subsidy_id")
+            applicant = data.get("applicant", {})
+            output_formats = data.get("output_formats", ["pdf"])
+            
             try:
-                with open(cache_file, "w", encoding="utf-8") as f:
-                    json.dump(all_subsidies, f, ensure_ascii=False, indent=2)
-                self.logger.info(f"Cache de subventions mis à jour: {len(all_subsidies)} subventions")
-            except IOError as e:
-                self.logger.error(f"Erreur lors de l'écriture du cache: {e}", exc_info=True)
+                output_files = self.subsidy_service.generate_application(
+                    project=project,
+                    subsidy_id=subsidy_id,
+                    applicant=applicant,
+                    output_formats=output_formats
+                )
+                
+                # Publier le résultat
+                self.publish_message("APPLICATION_GENERATION_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "subsidy_id": subsidy_id,
+                    "output_files": output_files,
+                    "status": "success"
+                })
+            except Exception as e:
+                logger.exception(f"Error generating application: {str(e)}")
+                
+                # Publier l'erreur
+                self.publish_message("APPLICATION_GENERATION_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "subsidy_id": subsidy_id,
+                    "status": "error",
+                    "error_message": str(e)
+                })
         
-        return all_subsidies
+        elif topic == "PARCEL_ANALYSIS_COMPLETED":
+            # Traiter les résultats d'analyse de parcelle du GeoAgent
+            if data.get("status") == "success":
+                parcel_id = data.get("parcel_id")
+                result = data.get("result", {})
+                
+                # Stocker les données d'analyse dans le cache
+                self.parcel_analysis_cache[parcel_id] = result
+                
+                logger.info(f"Received parcel analysis for {parcel_id} from GeoAgent")
+                
+                # Vérifier s'il y a une demande de subvention en attente pour cette parcelle
+                pending_request_id = self._check_pending_subsidy_requests(parcel_id)
+                if pending_request_id:
+                    self._process_pending_subsidy_request(pending_request_id, parcel_id)
+        
+        elif topic == "PRIORITY_ZONE_DETECTION_COMPLETED":
+            # Traiter les résultats de détection de zones prioritaires du GeoAgent
+            if data.get("status") == "success":
+                parcel_id = data.get("parcel_id")
+                priority_zones = data.get("priority_zones", [])
+                
+                # Stocker les données de zones prioritaires dans le cache
+                self.priority_zone_cache[parcel_id] = priority_zones
+                
+                logger.info(f"Received priority zones for {parcel_id} from GeoAgent")
+                
+                # Vérifier s'il y a une demande de subvention en attente pour cette parcelle
+                pending_request_id = self._check_pending_subsidy_requests(parcel_id)
+                if pending_request_id:
+                    self._process_pending_subsidy_request(pending_request_id, parcel_id)
     
-    def analyze_eligibility(
-        self, 
-        project: Dict[str, Any], 
-        subsidy_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    @log_function
+    def execute_action(self, action: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Analyse l'éligibilité d'un projet à une ou plusieurs subventions.
+        Exécute une action.
         
         Args:
-            project: Informations sur le projet
-            subsidy_id: Identifiant de la subvention à analyser (optionnel)
+            action: Action à exécuter
+            params: Paramètres de l'action
             
         Returns:
-            Résultat de l'analyse d'éligibilité
+            Résultat de l'action
         """
-        self.logger.info(f"Analyse d'éligibilité pour le projet de type {project.get('type', 'inconnu')}")
+        logger.info(f"SubsidyAgent executing action: {action}")
         
-        # Récupérer les subventions
-        all_subsidies = self._get_subsidies_from_cache_or_fetch()
-        
-        # Si un subsidy_id est fourni, filtrer la liste
-        if subsidy_id:
-            subsidies = [s for s in all_subsidies if s.get("id") == subsidy_id]
-            if not subsidies:
+        try:
+            if action == "search_subsidies":
+                # Rechercher des subventions
+                project_type = params.get("project_type")
+                region = params.get("region")
+                owner_type = params.get("owner_type")
+                
+                if not project_type:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: project_type"
+                    }
+                
+                # Si une parcelle est spécifiée, enrichir les données avec les zones prioritaires
+                parcel_id = params.get("parcel_id")
+                priority_zones = None
+                
+                if parcel_id:
+                    # Vérifier si les zones prioritaires sont déjà dans le cache
+                    if parcel_id in self.priority_zone_cache:
+                        priority_zones = self.priority_zone_cache[parcel_id]
+                    else:
+                        # Demander l'analyse des zones prioritaires au GeoAgent
+                        request_id = str(uuid.uuid4())
+                        self.publish_message("PRIORITY_ZONE_DETECTION_REQUESTED", {
+                            "request_id": request_id,
+                            "parcel_id": parcel_id
+                        })
+                        
+                        logger.info(f"Requested priority zone detection for {parcel_id} from GeoAgent")
+                
+                result = self.subsidy_service.search_subsidies(
+                    project_type=project_type,
+                    region=region,
+                    owner_type=owner_type,
+                    priority_zones=priority_zones
+                )
+                
                 return {
-                    "eligible": False,
-                    "error": f"Subvention introuvable: {subsidy_id}",
-                    "timestamp": datetime.now().isoformat()
+                    "status": "success",
+                    "result": result
                 }
-            subsidy = subsidies[0]
-            result = self._analyze_single_eligibility(project, subsidy)
-            return result
-        
-        # Sinon, analyser toutes les subventions
-        results = []
-        for subsidy in all_subsidies:
-            result = self._analyze_single_eligibility(project, subsidy)
-            if result["eligible"]:
-                results.append({
-                    "subsidy_id": subsidy.get("id"),
-                    "subsidy_title": subsidy.get("title"),
-                    "eligibility": result
-                })
-        
-        return {
-            "eligible_count": len(results),
-            "eligible_subsidies": results,
-            "timestamp": datetime.now().isoformat()
-        }
-    
-    def _analyze_single_eligibility(
-        self, 
-        project: Dict[str, Any], 
-        subsidy: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Analyse l'éligibilité d'un projet pour une subvention spécifique.
-        
-        Args:
-            project: Informations sur le projet
-            subsidy: Informations sur la subvention
             
-        Returns:
-            Résultat de l'analyse d'éligibilité
-        """
-        self.logger.debug(f"Analyse de l'éligibilité pour la subvention {subsidy.get('id')}")
-        
-        eligibility_conditions = []
-        is_eligible = True
-        
-        # Vérification du type de projet
-        project_type = project.get("type", "").lower()
-        eligible_projects = [p.lower() for p in subsidy.get("eligible_projects", [])]
-        
-        project_eligible = (
-            not eligible_projects or 
-            project_type in eligible_projects or 
-            "all" in eligible_projects
-        )
-        
-        eligibility_conditions.append({
-            "condition": "Type de projet éligible",
-            "satisfied": project_eligible,
-            "details": f"Type de projet: {project_type}"
-        })
-        
-        if not project_eligible:
-            is_eligible = False
-        
-        # Vérification de la localisation
-        location = project.get("location", "")
-        region = project.get("region", "")
-        eligible_regions = [r.lower() for r in subsidy.get("regions", [])]
-        
-        region_eligible = (
-            not eligible_regions or 
-            region.lower() in eligible_regions or 
-            "national" in eligible_regions
-        )
-        
-        eligibility_conditions.append({
-            "condition": "Région éligible",
-            "satisfied": region_eligible,
-            "details": f"Région: {region}"
-        })
-        
-        if not region_eligible:
-            is_eligible = False
-        
-        # Vérification de la superficie
-        area_ha = project.get("area_ha", 0)
-        min_area = subsidy.get("min_area_ha", 0)
-        max_area = subsidy.get("max_area_ha", float("inf"))
-        
-        area_eligible = area_ha >= min_area and (max_area == float("inf") or area_ha <= max_area)
-        
-        eligibility_conditions.append({
-            "condition": "Superficie éligible",
-            "satisfied": area_eligible,
-            "details": f"Superficie: {area_ha} ha (min: {min_area} ha, max: {max_area if max_area != float('inf') else 'non spécifié'} ha)"
-        })
-        
-        if not area_eligible:
-            is_eligible = False
-        
-        # Vérification des espèces
-        species = project.get("species", [])
-        eligible_species = subsidy.get("eligible_species", [])
-        
-        species_eligible = (
-            not eligible_species or 
-            any(s in eligible_species for s in species) or 
-            "all" in eligible_species
-        )
-        
-        eligibility_conditions.append({
-            "condition": "Espèces éligibles",
-            "satisfied": species_eligible,
-            "details": f"Espèces: {', '.join(species)}"
-        })
-        
-        if not species_eligible:
-            is_eligible = False
-        
-        # Vérification de la date limite
-        deadline = subsidy.get("deadline")
-        if deadline:
-            try:
-                deadline_date = datetime.fromisoformat(deadline.replace("Z", "+00:00"))
-                current_date = datetime.now()
-                deadline_eligible = current_date <= deadline_date
+            elif action == "analyze_eligibility":
+                # Analyser l'éligibilité
+                project = params.get("project", {})
+                subsidy_id = params.get("subsidy_id")
                 
-                eligibility_conditions.append({
-                    "condition": "Date limite respectée",
-                    "satisfied": deadline_eligible,
-                    "details": f"Date limite: {deadline_date.strftime('%d/%m/%Y')}"
-                })
+                if not project:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: project"
+                    }
                 
-                if not deadline_eligible:
-                    is_eligible = False
-            except (ValueError, TypeError):
-                self.logger.warning(f"Format de date invalide: {deadline}")
-        
-        # Calcul du montant de financement
-        funding_details = {}
-        if is_eligible:
-            # Calculer le montant de base
-            base_amount = 0
-            if subsidy.get("amount_per_ha"):
-                base_amount = float(subsidy.get("amount_per_ha", 0)) * area_ha
-            elif subsidy.get("funding_rate"):
-                # Extraire le taux numérique du texte (ex: "80%" -> 0.8)
-                try:
-                    rate_str = subsidy.get("funding_rate", "0%")
-                    rate = float(rate_str.strip("%")) / 100
-                    # Utiliser un coût moyen par ha si non spécifié dans le projet
-                    project_cost = project.get("cost", area_ha * 3000)  # Coût moyen de 3000€/ha
-                    base_amount = rate * project_cost
-                except (ValueError, TypeError):
-                    self.logger.warning(f"Format de taux de financement invalide: {subsidy.get('funding_rate')}")
-                    base_amount = 0
-            
-            # Appliquer les plafonds
-            if subsidy.get("max_funding") and base_amount > subsidy.get("max_funding"):
-                base_amount = float(subsidy.get("max_funding"))
-            
-            # Calculer les bonus
-            bonus_amount = 0
-            bonus_details = []
-            
-            # Exemple de bonus: certification forestière
-            if project.get("certifications") and "PEFC" in project.get("certifications", []):
-                bonus_pefc = base_amount * 0.1  # +10% pour certification PEFC
-                bonus_amount += bonus_pefc
-                bonus_details.append({
-                    "type": "Certification PEFC",
-                    "amount": bonus_pefc,
-                    "rate": "10%"
-                })
-            
-            # Exemple de bonus: zones prioritaires
-            if project.get("priority_zones") and any(zone in ["montagne", "france_relance"] for zone in project.get("priority_zones", [])):
-                bonus_zone = base_amount * 0.15  # +15% pour zones prioritaires
-                bonus_amount += bonus_zone
-                bonus_details.append({
-                    "type": "Zone prioritaire",
-                    "amount": bonus_zone,
-                    "rate": "15%"
-                })
-            
-            # Total
-            total_amount = base_amount + bonus_amount
-            
-            funding_details = {
-                "base_amount": round(base_amount, 2),
-                "bonus_amount": round(bonus_amount, 2),
-                "total_amount": round(total_amount, 2),
-                "details": {
-                    "area_ha": area_ha,
-                    "amount_per_ha": subsidy.get("amount_per_ha"),
-                    "funding_rate": subsidy.get("funding_rate"),
-                    "bonus_details": bonus_details
+                if not subsidy_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: subsidy_id"
+                    }
+                
+                # Si une parcelle est spécifiée, enrichir les données du projet
+                parcel_id = project.get("location")
+                if parcel_id:
+                    enhanced_project = self._enhance_project_with_geo_data(project, parcel_id)
+                    if enhanced_project:
+                        project = enhanced_project
+                
+                result = self.subsidy_service.analyze_eligibility(
+                    project=project,
+                    subsidy_id=subsidy_id
+                )
+                
+                return {
+                    "status": "success",
+                    "result": result
                 }
+            
+            elif action == "generate_application":
+                # Générer une demande de subvention
+                project = params.get("project", {})
+                subsidy_id = params.get("subsidy_id")
+                applicant = params.get("applicant", {})
+                output_formats = params.get("output_formats", ["pdf"])
+                
+                if not project:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: project"
+                    }
+                
+                if not subsidy_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: subsidy_id"
+                    }
+                
+                if not applicant:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: applicant"
+                    }
+                
+                # Si une parcelle est spécifiée, enrichir les données du projet
+                parcel_id = project.get("location")
+                if parcel_id:
+                    enhanced_project = self._enhance_project_with_geo_data(project, parcel_id)
+                    if enhanced_project:
+                        project = enhanced_project
+                
+                result = self.subsidy_service.generate_application(
+                    project=project,
+                    subsidy_id=subsidy_id,
+                    applicant=applicant,
+                    output_formats=output_formats
+                )
+                
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            else:
+                # Action inconnue
+                return {
+                    "status": "error",
+                    "error_message": f"Unknown action: {action}"
+                }
+        
+        except Exception as e:
+            logger.exception(f"Error executing action {action}: {str(e)}")
+            return {
+                "status": "error",
+                "error_message": str(e)
             }
-        
-        # Résultat final
-        result = {
-            "eligible": is_eligible,
-            "subsidy_id": subsidy.get("id"),
-            "subsidy_title": subsidy.get("title"),
-            "conditions": eligibility_conditions,
-            "next_steps": subsidy.get("application_process", []) if is_eligible else [],
-            "funding_details": funding_details if is_eligible else None,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        return result
     
-    def generate_application_documents(
-        self,
-        project: Dict[str, Any],
-        subsidy_id: str,
-        applicant: Dict[str, Any],
-        output_formats: List[str] = ["pdf"]
-    ) -> Dict[str, str]:
+    def _enhance_project_with_geo_data(self, project: Dict[str, Any], parcel_id: str) -> Optional[Dict[str, Any]]:
         """
-        Génère les documents de demande de subvention.
+        Enrichit les données du projet avec les données géospatiales.
         
         Args:
-            project: Informations sur le projet
-            subsidy_id: Identifiant de la subvention
-            applicant: Informations sur le demandeur
-            output_formats: Formats de sortie souhaités (pdf, html, docx)
+            project: Données du projet
+            parcel_id: Identifiant de la parcelle
             
         Returns:
-            Dictionnaire des chemins des documents générés par format
+            Projet enrichi ou None si les données ne sont pas disponibles
         """
-        self.logger.info(f"Génération de documents de demande pour la subvention {subsidy_id}")
+        enhanced_project = project.copy()
         
-        # Récupérer les informations de la subvention
-        all_subsidies = self._get_subsidies_from_cache_or_fetch()
-        subsidies = [s for s in all_subsidies if s.get("id") == subsidy_id]
-        
-        if not subsidies:
-            self.logger.error(f"Subvention introuvable: {subsidy_id}")
-            return {}
-        
-        subsidy = subsidies[0]
-        
-        # Vérifier l'éligibilité
-        eligibility = self._analyze_single_eligibility(project, subsidy)
-        
-        if not eligibility["eligible"]:
-            self.logger.warning(f"Le projet n'est pas éligible à la subvention {subsidy_id}")
-            return {}
-        
-        # Récupérer les données de la parcelle si disponible
-        parcel_data = {}
-        if project.get("location"):
-            try:
-                # Utiliser le service géo pour récupérer les infos de la parcelle
-                # Note: cette partie dépend de l'implémentation du GeoAgent
-                # Ce code est indicatif et doit être adapté à votre implémentation
-                from forestai.agents.geo_agent import GeoAgent
-                geo_agent = GeoAgent(self.config)
-                parcel_data = geo_agent.get_parcel_data(project["location"])
-            except Exception as e:
-                self.logger.warning(f"Impossible de récupérer les données de la parcelle: {e}")
-        
-        # Préparer les données pour les documents
-        document_data = {
-            "subsidy": subsidy,
-            "project": project,
-            "parcel": parcel_data,
-            "applicant": applicant,
-            "application_date": datetime.now().strftime("%d/%m/%Y"),
-            "eligibility": eligibility
-        }
-        
-        # Générer les documents dans les formats demandés
-        output_paths = {}
-        
-        for format_type in output_formats:
-            try:
-                if format_type.lower() == "pdf":
-                    output_path = self.document_generator.generate_application(
-                        subsidy, parcel_data, project, applicant, output_format="pdf"
-                    )
-                    output_paths["pdf"] = output_path
-                    
-                elif format_type.lower() == "html":
-                    output_path = self.document_generator.generate_application(
-                        subsidy, parcel_data, project, applicant, output_format="html"
-                    )
-                    output_paths["html"] = output_path
-                    
-                elif format_type.lower() == "docx":
-                    output_path = self.document_generator.generate_application(
-                        subsidy, parcel_data, project, applicant, output_format="docx"
-                    )
-                    output_paths["docx"] = output_path
-                    
-                else:
-                    self.logger.warning(f"Format non supporté: {format_type}")
-            except Exception as e:
-                self.logger.error(f"Erreur lors de la génération du document {format_type}: {e}", exc_info=True)
-        
-        return output_paths
-    
-    def get_subsidy_by_id(self, subsidy_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Récupère les informations d'une subvention par son identifiant.
-        
-        Args:
-            subsidy_id: Identifiant de la subvention
+        # Vérifier si les données d'analyse sont dans le cache
+        if parcel_id in self.parcel_analysis_cache:
+            analysis = self.parcel_analysis_cache[parcel_id]
             
-        Returns:
-            Informations sur la subvention ou None si non trouvée
-        """
-        all_subsidies = self._get_subsidies_from_cache_or_fetch()
-        subsidies = [s for s in all_subsidies if s.get("id") == subsidy_id]
+            # Ajouter les données d'analyse au projet
+            if "area_ha" not in enhanced_project and "area_ha" in analysis:
+                enhanced_project["area_ha"] = analysis["area_ha"]
+            
+            if "average_slope" not in enhanced_project and "average_slope" in analysis:
+                enhanced_project["slope"] = analysis["average_slope"]
+            
+            if "average_elevation" not in enhanced_project and "average_elevation" in analysis:
+                enhanced_project["elevation"] = analysis["average_elevation"]
+            
+            if "dominant_soil_type" not in enhanced_project and "dominant_soil_type" in analysis:
+                enhanced_project["soil_type"] = analysis["dominant_soil_type"]
+            
+            if "risks" not in enhanced_project and "risks" in analysis:
+                enhanced_project["risks"] = analysis["risks"]
+            
+            logger.info(f"Enhanced project with parcel analysis data for {parcel_id}")
         
-        if not subsidies:
+        # Vérifier si les données de zones prioritaires sont dans le cache
+        if parcel_id in self.priority_zone_cache:
+            priority_zones = self.priority_zone_cache[parcel_id]
+            
+            # Ajouter les zones prioritaires au projet
+            enhanced_project["priority_zones"] = priority_zones
+            
+            logger.info(f"Enhanced project with priority zones data for {parcel_id}")
+        
+        # Si aucune donnée n'a été ajoutée, retourner None
+        if enhanced_project == project:
             return None
         
-        return subsidies[0]
+        return enhanced_project
     
-    def get_status_report(self) -> Dict[str, Any]:
+    def _check_pending_subsidy_requests(self, parcel_id: str) -> Optional[str]:
         """
-        Génère un rapport sur l'état de l'agent.
+        Vérifie s'il y a une demande de subvention en attente pour une parcelle.
         
+        Args:
+            parcel_id: Identifiant de la parcelle
+            
         Returns:
-            Dictionnaire contenant les informations d'état
+            Identifiant de la demande en attente ou None
         """
-        status = super().get_status()
+        # Dans une vraie implémentation, cela vérifierait une file d'attente de demandes
+        return None
+    
+    def _process_pending_subsidy_request(self, request_id: str, parcel_id: str) -> None:
+        """
+        Traite une demande de subvention en attente.
         
-        # Ajouter des informations spécifiques
-        all_subsidies = self._get_subsidies_from_cache_or_fetch()
-        
-        # Statistiques sur les subventions
-        status.update({
-            "subsidies_count": len(all_subsidies),
-            "cache_status": "actif" if self.use_cache else "inactif",
-            "scrapers_count": len(self.scrapers),
-            "scrapers": [scraper.name for scraper in self.scrapers]
-        })
-        
-        return status
+        Args:
+            request_id: Identifiant de la demande
+            parcel_id: Identifiant de la parcelle
+        """
+        # Dans une vraie implémentation, cela traiterait la demande en attente
+        pass
