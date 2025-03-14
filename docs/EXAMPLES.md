@@ -162,7 +162,7 @@ python run.py --agent subsidy --action generate_application --params '{
     "contact": "contact@domaineforestier.fr",
     "siret": "12345678900012"
   },
-  "output_formats": ["pdf", "html"]
+  "output_formats": ["pdf", "html", "docx"]
 }'
 ```
 
@@ -301,6 +301,69 @@ print(f"Zone climatique actuelle: {climate_zone['name']}")
 print(f"Nombre d'espèces recommandées (climat actuel): {len(current_recommendations)}")
 print(f"Nombre d'espèces recommandées (climat 2050): {len(future_recommendations)}")
 print(f"Nombre d'espèces compatibles avec le terrain: {len(filtered_recommendations)}")
+```
+
+### Intégration SubsidyAgent et GeoAgent (Prochaine étape)
+
+Ce script illustre l'intégration prévue entre SubsidyAgent et GeoAgent pour une analyse d'éligibilité enrichie :
+
+```python
+# Exemple de ce qui est planifié pour la prochaine étape
+from forestai.agents.geo_agent import GeoAgent
+from forestai.agents.subsidy_agent import SubsidyAgent
+from forestai.core.utils.config import Config
+
+# Chargement de la configuration
+config = Config().load_config(".env")
+
+# Initialisation des agents
+geo_agent = GeoAgent(config)
+subsidy_agent = SubsidyAgent(config)
+
+# 1. Identifier une parcelle
+parcel_id = "13097000B0012"
+
+# 2. Obtenir les données géographiques et analyser le potentiel
+parcel_data = geo_agent.get_parcel_data(parcel_id)
+geo_potential = geo_agent.analyze_potential(parcel_id=parcel_id)
+
+# 3. Identification des zones prioritaires basée sur les données géographiques
+priority_zones = geo_agent.detect_priority_zones(parcel_id)
+
+# 4. Enrichissement du projet avec les données géographiques
+enriched_project = {
+    "type": "reboisement",
+    "area_ha": parcel_data.get("area_ha", 0),
+    "location": parcel_id,
+    "species": ["pinus_halepensis", "quercus_ilex"],
+    # Données enrichies depuis GeoAgent
+    "slope": geo_potential.get("average_slope"),
+    "elevation": geo_potential.get("average_elevation"),
+    "soil_type": geo_potential.get("dominant_soil_type"),
+    "priority_zones": priority_zones,
+    "risks": geo_potential.get("risks", []),
+    "region": parcel_data.get("region", "")
+}
+
+# 5. Recherche de subventions adaptées avec les données enrichies
+subsidies = subsidy_agent.search_subsidies(
+    project_type=enriched_project["type"],
+    region=enriched_project["region"],
+    priority_zones=enriched_project["priority_zones"]
+)
+
+# 6. Analyse d'éligibilité améliorée avec les données géographiques
+for subsidy in subsidies:
+    eligibility = subsidy_agent.analyze_eligibility(
+        project=enriched_project,
+        subsidy_id=subsidy["id"]
+    )
+    
+    if eligibility["eligible"]:
+        print(f"Éligible à la subvention {subsidy['title']}")
+        print(f"Score: {eligibility.get('eligibility_score', 'N/A')}")
+        if "priority_bonus" in eligibility:
+            print(f"Bonus zone prioritaire: {eligibility['priority_bonus']} %")
 ```
 
 ## Exemples spécifiques par cas d'usage
