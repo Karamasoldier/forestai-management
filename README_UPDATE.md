@@ -1,72 +1,90 @@
 # Mise à jour du README principal
 
-Cette mise à jour vise à intégrer les nouvelles fonctionnalités du module d'analyse climatique dans le README principal du projet. Ces modifications devraient être fusionnées avec le README.md existant.
+Cette mise à jour vise à intégrer les nouvelles fonctionnalités du SubsidyAgent dans le README principal du projet. Ces modifications devraient être fusionnées avec le README.md existant.
 
 ## Nouveaux modules et fonctionnalités
 
-### Module d'analyse climatique (ClimateAnalyzer)
+### Agent de Subventions (SubsidyAgent)
 
-Le module ClimateAnalyzer est désormais pleinement implémenté et intégré au projet ForestAI. Ce module permet :
+L'agent de subventions (SubsidyAgent) est désormais pleinement implémenté et intégré au projet ForestAI. Cet agent permet :
 
-- Identification des zones climatiques pour une parcelle donnée
-- Recommandation d'espèces adaptées au climat actuel et futur
-- Anticipation des impacts du changement climatique sur les espèces forestières
-- Intégration avec les analyses de terrain pour des recommandations complètes
+- **Veille sur les aides disponibles** via différents scrapers spécialisés
+- **Analyse d'éligibilité** des projets aux différentes subventions
+- **Génération automatique de dossiers de demande** aux formats PDF, DOCX et HTML
+- **Stockage et mise à jour** des informations sur les subventions
+- **Recommandation de subventions** adaptées aux parcelles et projets spécifiques
 
-#### Architecture du module climatique
+#### Architecture de l'agent de subventions
 
 ```
-domain/services/
-├── climate_analyzer.py           # Orchestrateur principal
-├── climate_data_loader.py        # Chargement des données climatiques
-├── climate_zone_analyzer.py      # Analyse des zones climatiques
-└── species_recommender.py        # Recommandation d'espèces adaptées
+forestai/agents/subsidy_agent/
+├── __init__.py                    # Point d'entrée du package
+├── subsidy_agent.py               # Implémentation principale de l'agent
+├── eligibility.py                 # Système d'analyse d'éligibilité
+├── scrapers/                      # Scrapers de subventions
+│   ├── __init__.py
+│   ├── base_scraper.py            # Classe de base pour tous les scrapers
+│   ├── france_relance_scraper.py  # Scraper pour les aides France Relance
+│   ├── europe_invest_scraper.py   # Scraper pour les aides européennes
+│   └── regional_scraper.py        # Scraper pour les aides régionales
+└── document_generation/           # Génération de documents
+    ├── __init__.py
+    ├── document_generator.py      # Coordinateur des générateurs
+    ├── pdf_generator.py           # Génération de PDF
+    ├── html_generator.py          # Génération de HTML
+    └── docx_generator.py          # Génération de DOCX
 ```
 
-#### Intégration avec le GeoAgent
+#### Intégration avec les autres agents
 
-Le module d'analyse climatique peut être utilisé conjointement avec le GeoAgent pour enrichir les analyses de terrain avec des recommandations climatiques. Un exemple d'intégration est disponible dans `examples/climate_geo_integration_example.py`.
+L'agent de subventions peut être utilisé conjointement avec le GeoAgent et le ReglementationAgent pour fournir une analyse complète des parcelles forestières :
+
+1. Le **GeoAgent** fournit les caractéristiques géographiques de la parcelle
+2. Le **ReglementationAgent** vérifie les contraintes légales et réglementaires
+3. Le **SubsidyAgent** identifie les subventions disponibles et évalue l'éligibilité
+
+Un exemple d'intégration est disponible dans `examples/subsidy_geo_integration_example.py`.
 
 ## Nouveaux exemples
 
-Un nouvel exemple a été ajouté pour démontrer l'utilisation du module d'analyse climatique et son intégration avec le GeoAgent :
+De nouveaux exemples ont été ajoutés pour démontrer l'utilisation de l'agent de subventions :
 
-- `examples/climate_analyzer_example.py` : Utilisation basique du module d'analyse climatique
-- `examples/climate_geo_integration_example.py` : Intégration avec le GeoAgent et génération de rapports combinés
+- `examples/subsidy_agent_example.py` : Utilisation basique de l'agent de subventions
+- `examples/subsidy_eligibility_example.py` : Analyse d'éligibilité pour différents types de projets
+- `examples/document_generation_example.py` : Génération de dossiers de demande
+- `examples/subsidy_geo_integration_example.py` : Intégration avec le GeoAgent
 
 ## Nouvelle documentation
 
-Une nouvelle documentation a été ajoutée pour détailler le module d'analyse climatique et son intégration :
+Une nouvelle documentation a été ajoutée pour détailler l'agent de subventions et son utilisation :
 
-- `docs/ClimateAnalyzer.md` : Documentation du module d'analyse climatique
-- `docs/ForestAI_Climate_Integration.md` : Guide d'intégration du module climatique avec le GeoAgent
-- `forestai/core/domain/services/README.md` : Documentation des services de domaine climatique
+- `docs/SubsidyAgent.md` : Documentation complète de l'agent de subventions
+- `docs/SubsidyDocGeneration.md` : Guide d'utilisation du système de génération de documents
 
 ## État d'avancement du projet
 
-La phase 3 a progressé avec l'implémentation complète du module d'analyse climatique :
+La phase 3 a progressé avec l'implémentation complète de l'agent de subventions :
 
-- [x] Implémentation de l'analyseur climatique modulaire
-- [x] Intégration des données climatiques Climessences
-- [x] Système de recommandation d'espèces adaptées
-- [x] Scénarios de changement climatique
+- [x] Implémentation du crawler de subventions
+- [x] Implémentation du système d'analyse d'éligibilité
+- [x] Implémentation du générateur de dossiers
 - [x] Intégration avec le GeoAgent
 
 ## Prochaines étapes
 
 Les prochaines étapes prioritaires sont :
 
-1. **Implémentation du SubventionAgent**
-   - [ ] Crawler de subventions
-   - [ ] Système d'analyse d'éligibilité
-   - [ ] Générateur de dossiers de demande
+1. **Amélioration de l'agent de subventions**
+   - [ ] Ajout de sources de subventions supplémentaires
+   - [ ] Amélioration de la précision de l'analyse d'éligibilité
+   - [ ] Intégration de données sur les aides dynamiques (API)
 
-2. **Amélioration des données climatiques**
-   - [ ] Ajout de scénarios climatiques plus précis (horizon 2070)
-   - [ ] Augmentation de la base de données d'espèces
-   - [ ] Intégration de données à plus haute résolution spatiale
-
-3. **Développement du DiagnosticAgent**
+2. **Développement du DiagnosticAgent**
    - [ ] Système d'analyse forestière
    - [ ] Intégration avec les données géospatiales et climatiques
    - [ ] Génération de rapports de diagnostic
+
+3. **Interface utilisateur**
+   - [ ] Conception des wireframes
+   - [ ] Implémentation du frontend FastAPI
+   - [ ] Tests d'acceptation utilisateur
