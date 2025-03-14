@@ -1,5 +1,8 @@
-# forestai/agents/geo_agent/__init__.py
+"""
+Module GeoAgent pour ForestAI.
+Agent de géotraitement pour l'analyse géospatiale des parcelles forestières.
+"""
 
-from .geo_agent import GeoAgent
+from forestai.agents.geo_agent.geo_agent import GeoAgent
 
 __all__ = ['GeoAgent']
