@@ -209,3 +209,104 @@ def simulate_detailed_geo_analysis(parcel):
         geo_analysis["forestry_potential"]["potential_class"] = "Faible"
     
     return geo_analysis
+
+def filter_recommendations_with_constraints(recommendations, constraints, terrain_data):
+    """
+    Filtre intelligemment les recommandations d'espèces en fonction des contraintes de terrain.
+    
+    Args:
+        recommendations: Liste des recommandations d'espèces du ClimateAnalyzer
+        constraints: Liste des contraintes de terrain identifiées
+        terrain_data: Données de terrain issues de l'analyse géospatiale
+        
+    Returns:
+        Liste filtrée des recommandations d'espèces adaptées aux contraintes
+    """
+    # Copier les recommandations pour éviter de modifier l'original
+    filtered_recs = recommendations.copy()
+    
+    # Règles de filtrage en fonction des contraintes terrain
+    if "pente_forte" in constraints:
+        # Garder les espèces avec un système racinaire profond pour stabiliser les pentes
+        filtered_recs = [r for r in filtered_recs if r["species_name"] not in ["Fagus sylvatica"]]
+        print("  - Filtrage pour pentes fortes appliqué")
+    
+    if "sécheresse_estivale" in constraints or "sol_sec" in constraints:
+        # Filtrer pour garder uniquement les espèces résistantes à la sécheresse
+        filtered_recs = [r for r in filtered_recs if r["risks"].get("drought") != "high"]
+        print("  - Filtrage pour résistance à la sécheresse appliqué")
+    
+    if "risque_incendie_élevé" in constraints:
+        # Préférer les espèces moins inflammables
+        filtered_recs = [r for r in filtered_recs if r["risks"].get("fire") != "high"]
+        print("  - Filtrage pour résistance au feu appliqué")
+    
+    if "gel_tardif" in constraints:
+        # Préférer les espèces résistantes au gel
+        filtered_recs = [r for r in filtered_recs if r["risks"].get("frost") != "high"]
+        print("  - Filtrage pour résistance au gel appliqué")
+    
+    # Tenir compte de la pente moyenne pour les espèces sensibles
+    if terrain_data["terrain_analysis"]["slope"]["mean"] > 15:
+        filtered_recs = [r for r in filtered_recs if r["species_name"] not in ["Quercus robur"]]
+        print("  - Filtrage pour forte pente moyenne appliqué")
+    
+    # Tenir compte de l'exposition pour certaines espèces
+    aspect = terrain_data["terrain_analysis"]["aspect"]
+    if aspect in ["South", "Southeast", "Southwest"]:
+        # Exposition sud: favoriser les espèces thermophiles
+        for rec in filtered_recs:
+            if rec["species_name"] in ["Quercus pubescens", "Cedrus atlantica", "Pinus pinaster"]:
+                rec["global_score"] *= 1.1  # Bonus de 10%
+        print("  - Bonus pour exposition sud appliqué")
+    
+    # Recalculer les rangs en fonction des scores modifiés
+    filtered_recs = sorted(filtered_recs, key=lambda x: x["global_score"], reverse=True)
+    
+    return filtered_recs
+
+def generate_species_comparison_chart(recommendations, base_filename, output_dir):
+    """
+    Génère un graphique comparant les espèces recommandées pour différents scénarios climatiques.
+    
+    Args:
+        recommendations: Dictionnaire des recommandations par scénario
+        base_filename: Nom de base pour le fichier de sortie
+        output_dir: Répertoire de sortie
+    """
+    # Préparer les données
+    current_species = [f"{rec['species_name']} ({rec['common_name']})" for rec in recommendations["current"][:5]]
+    current_scores = [rec["global_score"] for rec in recommendations["current"][:5]]
+    
+    future_species = [f"{rec['species_name']} ({rec['common_name']})" for rec in recommendations["2050_rcp45"][:5]]
+    future_scores = [rec["global_score"] for rec in recommendations["2050_rcp45"][:5]]
+    
+    # Créer un DataFrame pour faciliter le tracé
+    data = []
+    
+    for species, score in zip(current_species, current_scores):
+        data.append({"Espèce": species, "Score": score, "Scénario": "Climat actuel"})
+    
+    for species, score in zip(future_species, future_scores):
+        data.append({"Espèce": species, "Score": score, "Scénario": "Climat 2050 (RCP 4.5)"})
+    
+    df = pd.DataFrame(data)
+    
+    # Créer la figure
+    plt.figure(figsize=(12, 8))
+    ax = sns.barplot(x="Espèce", y="Score", hue="Scénario", data=df)
+    
+    # Personnaliser le graphique
+    plt.title("Comparaison des espèces recommandées par scénario climatique", fontsize=14)
+    plt.xlabel("Espèce", fontsize=12)
+    plt.ylabel("Score global", fontsize=12)
+    plt.xticks(rotation=45, ha="right")
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    
+    # Sauvegarder le graphique
+    chart_path = output_dir / f"{base_filename}_comparison.png"
+    plt.savefig(chart_path, dpi=300, bbox_inches="tight")
+    plt.close()
+    
+    print(f"Graphique comparatif généré: {chart_path}")
