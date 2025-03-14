@@ -132,3 +132,80 @@ def create_real_world_parcels():
     print(f"Créé {len(gdf)} parcelles forestières pour l'analyse")
     
     return gdf
+
+def simulate_detailed_geo_analysis(parcel):
+    """
+    Simule une analyse géospatiale détaillée d'une parcelle.
+    
+    Dans un cas réel, cela utiliserait les modules du GeoAgent pour analyser
+    la parcelle (BDTopoLoader, TerrainCoordinator, etc.)
+    
+    Args:
+        parcel: Une ligne du GeoDataFrame de parcelles
+        
+    Returns:
+        Dictionnaire avec les résultats de l'analyse géospatiale
+    """
+    # Simuler l'analyse du GeoAgent avec des valeurs réalistes
+    geo_analysis = {
+        "id": parcel["id"],
+        "name": parcel["name"],
+        "region": parcel["region"],
+        "area_ha": parcel["area_ha"],
+        "geometry": parcel["geometry"],
+        "soil_analysis": {
+            "type": parcel["soil_type"],
+            "ph": np.random.uniform(4.5, 7.5),
+            "organic_matter": np.random.uniform(1.0, 5.0)
+        },
+        "terrain_analysis": {
+            "elevation": {
+                "min": parcel["elevation_mean"] - np.random.uniform(10, 50),
+                "max": parcel["elevation_mean"] + np.random.uniform(10, 50),
+                "mean": parcel["elevation_mean"]
+            },
+            "slope": {
+                "min": max(0, parcel["slope_mean"] - np.random.uniform(1, 5)),
+                "max": parcel["slope_mean"] + np.random.uniform(1, 10),
+                "mean": parcel["slope_mean"]
+            },
+            "aspect": np.random.choice(["North", "South", "East", "West", "Northeast", "Southeast", "Southwest", "Northwest"])
+        },
+        "hydrology": {
+            "water_bodies": int(np.random.poisson(1)),
+            "streams_length_m": np.random.uniform(0, 500),
+            "distance_to_nearest_water_m": np.random.uniform(50, 2000)
+        },
+        "land_cover": {
+            "dominant": np.random.choice(["Forêt mixte", "Forêt de conifères", "Forêt de feuillus", "Végétation arbustive"]),
+            "forest_percentage": np.random.uniform(60, 95)
+        },
+        "infrastructure": {
+            "roads_length_m": np.random.uniform(0, 1000),
+            "distance_to_nearest_road_m": np.random.uniform(20, 1000),
+            "buildings_count": int(np.random.poisson(0.5))
+        },
+        "forestry_potential": {
+            "potential_score": np.random.uniform(0.55, 0.90),
+            "constraints": parcel["constraints"],
+            "opportunities": [
+                np.random.choice(["bonne_accessibilité", "présence_cours_eau", "exposition_favorable"]),
+                np.random.choice(["sol_adapté", "climat_tempéré", "protection_vent"])
+            ]
+        }
+    }
+    
+    # Déterminer la classe de potentiel en fonction du score
+    score = geo_analysis["forestry_potential"]["potential_score"]
+    if score >= 0.80:
+        geo_analysis["forestry_potential"]["potential_class"] = "Excellent"
+    elif score >= 0.70:
+        geo_analysis["forestry_potential"]["potential_class"] = "Très bon"
+    elif score >= 0.60:
+        geo_analysis["forestry_potential"]["potential_class"] = "Bon"
+    elif score >= 0.50:
+        geo_analysis["forestry_potential"]["potential_class"] = "Moyen"
+    else:
+        geo_analysis["forestry_potential"]["potential_class"] = "Faible"
+    
+    return geo_analysis
