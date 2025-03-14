@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dossier de demande - {{ subsidy.title }}</title>
+    <style>
+        body {
+            font-family: 'Calibri', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 21cm;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2cm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2cm;
+        }
+        .logo {
+            max-height: 2cm;
+            margin-bottom: 1cm;
+        }
+        h1 {
+            color: #336699;
+            font-size: 24pt;
+            margin-bottom: 0.5cm;
+        }
+        h2 {
+            color: #336699;
+            font-size: 18pt;
+            margin-top: 1cm;
+            margin-bottom: 0.5cm;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.2cm;
+        }
+        .date {
+            text-align: right;
+            font-style: italic;
+            margin-bottom: 1cm;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1cm;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            width: 30%;
+        }
+        ul {
+            margin-top: 0.3cm;
+            margin-bottom: 0.5cm;
+        }
+        .footer {
+            margin-top: 2cm;
+            padding-top: 0.5cm;
+            border-top: 1px solid #eee;
+            font-size: 10pt;
+            color: #666;
+        }
+        .contact {
+            margin-top: 1cm;
+            padding: 0.5cm;
+            background-color: #f2f7ff;
+            border-left: 4px solid #336699;
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logo_path %}
+            <img src="{{ logo_path }}" alt="Logo ForestAI" class="logo">
+            {% endif %}
+            <h1>Dossier de demande de subvention</h1>
+            <h2>{{ subsidy.title }}</h2>
+        </div>
+
+        <div class="date">
+            Document généré le {{ generated_at }}
+        </div>
+
+        <h2>Informations sur le demandeur</h2>
+        <table>
+            <tr>
+                <th>Nom</th>
+                <td>{{ applicant.name|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Adresse</th>
+                <td>{{ applicant.address|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Téléphone</th>
+                <td>{{ applicant.phone|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>{{ applicant.email|default('') }}</td>
+            </tr>
+            <tr>
+                <th>SIRET</th>
+                <td>{{ applicant.siret|default('') }}</td>
+            </tr>
+        </table>
+
+        <h2>Informations sur la parcelle</h2>
+        <table>
+            <tr>
+                <th>Identifiant</th>
+                <td>{{ parcel.id|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Commune</th>
+                <td>{{ parcel.commune|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Section</th>
+                <td>{{ parcel.section|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Surface (ha)</th>
+                <td>{{ parcel.surface|default(0)|round(2) }}</td>
+            </tr>
+            <tr>
+                <th>Région</th>
+                <td>{{ parcel.region|default('') }}</td>
+            </tr>
+        </table>
+
+        <h2>Informations sur le projet</h2>
+        <table>
+            <tr>
+                <th>Type de projet</th>
+                <td>{{ project.type|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Budget total (€)</th>
+                <td>{{ project.budget|default(0)|round(2) }}</td>
+            </tr>
+            <tr>
+                <th>Objectifs</th>
+                <td>{{ project.objectives|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Date de début</th>
+                <td>{{ project.start_date|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Durée (mois)</th>
+                <td>{{ project.duration|default('') }}</td>
+            </tr>
+        </table>
+
+        <h2>Informations sur la subvention</h2>
+        
+        {% if subsidy.description %}
+        <p><strong>Description:</strong> {{ subsidy.description }}</p>
+        {% endif %}
+        
+        <table>
+            <tr>
+                <th>Source</th>
+                <td>{{ subsidy.source|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Région</th>
+                <td>{{ subsidy.region|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Taux de financement</th>
+                <td>{{ subsidy.financing_rate|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Montant min. (€)</th>
+                <td>{{ subsidy.min_amount|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Montant max. (€)</th>
+                <td>{{ subsidy.max_amount|default('') }}</td>
+            </tr>
+            <tr>
+                <th>Date limite</th>
+                <td>{{ subsidy.application_deadline|default('') }}</td>
+            </tr>
+        </table>
+
+        {% if subsidy.eligibility_criteria %}
+        <h2>Critères d'éligibilité</h2>
+        <ul>
+            {% for criterion in subsidy.eligibility_criteria %}
+            <li>{{ criterion }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if subsidy.contact or subsidy.url %}
+        <div class="contact">
+            {% if subsidy.contact %}
+            <p><strong>Contact pour cette subvention:</strong> {{ subsidy.contact }}</p>
+            {% endif %}
+            
+            {% if subsidy.url %}
+            <p><strong>Pour plus d'informations:</strong> <a href="{{ subsidy.url }}">{{ subsidy.url }}</a></p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>Ce document a été généré automatiquement par ForestAI. Pour tout renseignement complémentaire, veuillez contacter le service d'aide aux demandes de subventions.</p>
+        </div>
+    </div>
+</body>
+</html>
