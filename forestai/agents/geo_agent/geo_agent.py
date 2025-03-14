@@ -8,6 +8,7 @@ from typing import Dict, Any, List, Optional, Union
 
 from forestai.core.domain.base_agent import BaseAgent
 from forestai.core.domain.services.geo_service import GeoService
+from forestai.core.domain.services.priority_zone_service import PriorityZoneService
 from forestai.core.communication.message_bus import Message
 from forestai.core.utils.logging_config import log_function
 
@@ -41,8 +42,9 @@ class GeoAgent(BaseAgent):
         # Initialiser la classe parent
         super().__init__(config, agent_id, all_topics)
         
-        # Initialiser le service de géotraitement
+        # Initialiser les services
         self.geo_service = GeoService(self.config.as_dict())
+        self.priority_zone_service = PriorityZoneService(self.config.as_dict())
         
         logger.info(f"GeoAgent initialized: {self.agent_id}")
     
@@ -118,15 +120,25 @@ class GeoAgent(BaseAgent):
         elif topic == "PRIORITY_ZONE_DETECTION_REQUESTED":
             # Détecter les zones prioritaires
             parcel_id = data.get("parcel_id")
+            region = data.get("region")
             
             try:
-                priority_zones = self.geo_service.detect_priority_zones(parcel_id)
+                # Récupérer la géométrie de la parcelle
+                parcel_data = self.geo_service.get_parcel_geometry(parcel_id)
+                geometry = json.loads(parcel_data["geometry"])
+                
+                # Détecter les zones prioritaires
+                priority_zones = self.detect_priority_zones(parcel_id, geometry, region)
+                
+                # Calculer l'impact sur les subventions
+                subsidy_impact = self.priority_zone_service.get_subsidy_impact(priority_zones)
                 
                 # Publier le résultat
                 self.publish_message("PRIORITY_ZONE_DETECTION_COMPLETED", {
                     "request_id": data.get("request_id"),
                     "parcel_id": parcel_id,
                     "priority_zones": priority_zones,
+                    "subsidy_impact": subsidy_impact,
                     "status": "success"
                 })
             except Exception as e:
@@ -224,6 +236,7 @@ class GeoAgent(BaseAgent):
             elif action == "detect_priority_zones":
                 # Détecter les zones prioritaires
                 parcel_id = params.get("parcel_id")
+                region = params.get("region")
                 
                 if not parcel_id:
                     return {
@@ -231,10 +244,44 @@ class GeoAgent(BaseAgent):
                         "error_message": "Missing required parameter: parcel_id"
                     }
                 
-                result = self.geo_service.detect_priority_zones(parcel_id)
+                # Récupérer la géométrie de la parcelle
+                parcel_data = self.geo_service.get_parcel_geometry(parcel_id)
+                geometry = json.loads(parcel_data["geometry"])
+                
+                # Détecter les zones prioritaires
+                result = self.detect_priority_zones(parcel_id, geometry, region)
                 return {
                     "status": "success",
                     "result": result
+                }
+            
+            elif action == "auto_detect_subsidies":
+                # Détecter automatiquement les subventions potentielles
+                parcel_id = params.get("parcel_id")
+                region = params.get("region")
+                
+                if not parcel_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: parcel_id"
+                    }
+                
+                # Récupérer la géométrie de la parcelle
+                parcel_data = self.geo_service.get_parcel_geometry(parcel_id)
+                geometry = json.loads(parcel_data["geometry"])
+                
+                # Détecter les zones prioritaires
+                priority_zones = self.detect_priority_zones(parcel_id, geometry, region)
+                
+                # Calculer l'impact sur les subventions
+                subsidy_impact = self.priority_zone_service.get_subsidy_impact(priority_zones)
+                
+                return {
+                    "status": "success",
+                    "result": {
+                        "priority_zones": priority_zones,
+                        "subsidy_impact": subsidy_impact
+                    }
                 }
             
             elif action == "generate_map":
@@ -271,3 +318,29 @@ class GeoAgent(BaseAgent):
                 "status": "error",
                 "error_message": str(e)
             }
+
+    def detect_priority_zones(self, parcel_id: str, geometry: Dict[str, Any], region: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Détecte les zones prioritaires pour une parcelle.
+        
+        Args:
+            parcel_id: Identifiant de la parcelle
+            geometry: Géométrie de la parcelle
+            region: Région administrative (optionnel)
+            
+        Returns:
+            Liste des zones prioritaires
+        """
+        # Si aucune région n'est spécifiée, essayer de la récupérer depuis les données de la parcelle
+        if not region:
+            try:
+                parcel_data = self.geo_service.get_parcel_data(parcel_id)
+                region = parcel_data.get("region")
+            except Exception as e:
+                logger.warning(f"Failed to get region from parcel data: {str(e)}")
+        
+        # Détecter les zones prioritaires
+        priority_zones = self.priority_zone_service.detect_priority_zones(geometry, region)
+        logger.info(f"Detected {len(priority_zones)} priority zones for parcel {parcel_id}")
+        
+        return priority_zones
