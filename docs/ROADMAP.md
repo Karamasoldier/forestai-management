@@ -31,12 +31,16 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - ✅ Développement du ClimateAnalyzer
 - ✅ Intégration GeoAgent ↔ ClimateAnalyzer
 - ✅ Mise en place du système de bus de messages
+- ✅ Implémentation du SubsidyAgent
+- ✅ Développement des scrapers de subventions
+- ✅ Génération automatique de documents (PDF, HTML, DOCX)
 
 ### Objectifs en cours
 
-- 🔄 Implémentation du SubsidyAgent
-- 🔄 Développement des scrapers de subventions
-- 🔄 Génération automatique de documents (PDF, HTML)
+- 🔄 Intégration SubsidyAgent ↔ GeoAgent
+- 🔄 Système de détection automatique des zones prioritaires pour subventions
+- 🔄 Tests d'intégration entre agents
+- 🔄 Documentation de l'utilisation combinée des agents
 - 🔄 API REST pour l'accès externe aux fonctionnalités
 - 🔄 Amélioration des métriques de potentiel forestier
 
@@ -88,11 +92,11 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## État d'avancement actuel
 
 | Module | Progression | Détails |
-|--------|-------------|---------|
+|--------|-------------|---------
 | GeoAgent | 90% | Fonctionnalités principales implémentées, optimisations en cours |
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
-| SubsidyAgent | 40% | Structure de base et scrapers implémentés, système d'analyse d'éligibilité en cours |
+| SubsidyAgent | 70% | Structure principale et génération de documents complètes, intégration avancée à finaliser |
 | DiagnosticAgent | 5% | Conception préliminaire, implémentation à venir |
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
@@ -103,9 +107,10 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 2
-  - Implémentation complète du SubsidyAgent
+  - Intégration complète SubsidyAgent ↔ GeoAgent
   - API REST complète avec documentation OpenAPI
   - Système de cache optimisé
+  - Documentation inter-agents
 
 - **Q3 2025**: Début Phase 3
   - Implémentation du DiagnosticAgent V1
@@ -126,7 +131,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Développement du SubsidyAgent** - Finalisation des scrapers et du système d'analyse d'éligibilité
+1. **Intégration entre agents** - Développement de l'intégration SubsidyAgent ↔ GeoAgent
 2. **Optimisation de performance** - Parallélisation des analyses spatiales et mise en cache intelligente
 3. **Tests** - Développement de tests unitaires et d'intégration
 4. **Documentation** - Amélioration des guides d'utilisation et exemples
