@@ -56,8 +56,8 @@ class SubsidyAgent(BaseAgent):
         
         # Initialisation du générateur de documents
         self.document_generator = SubsidyDocumentGenerator(
-            templates_dir=os.path.join(self.data_dir, "templates"),
-            output_dir=self.output_dir
+            {"templates_dir": os.path.join(self.data_dir, "templates"),
+             "output_dir": self.output_dir}
         )
         
         self.logger.info("SubsidyAgent initialisé")
@@ -219,7 +219,8 @@ class SubsidyAgent(BaseAgent):
         if project_type:
             filtered_subsidies = [
                 s for s in filtered_subsidies 
-                if project_type.lower() in [p.lower() for p in s.get("eligible_projects", [])]
+                if project_type.lower() in [p.lower() for p in s.get("eligible_projects", [])]\
+                or "all" in [p.lower() for p in s.get("eligible_projects", [])]
             ]
         
         if region:
@@ -448,28 +449,96 @@ class SubsidyAgent(BaseAgent):
         # Vérification de la date limite
         deadline = subsidy.get("deadline")
         if deadline:
-            deadline_date = datetime.fromisoformat(deadline.replace("Z", "+00:00"))
-            current_date = datetime.now()
-            deadline_eligible = current_date <= deadline_date
+            try:
+                deadline_date = datetime.fromisoformat(deadline.replace("Z", "+00:00"))
+                current_date = datetime.now()
+                deadline_eligible = current_date <= deadline_date
+                
+                eligibility_conditions.append({
+                    "condition": "Date limite respectée",
+                    "satisfied": deadline_eligible,
+                    "details": f"Date limite: {deadline_date.strftime('%d/%m/%Y')}"
+                })
+                
+                if not deadline_eligible:
+                    is_eligible = False
+            except (ValueError, TypeError):
+                self.logger.warning(f"Format de date invalide: {deadline}")
+        
+        # Calcul du montant de financement
+        funding_details = {}
+        if is_eligible:
+            # Calculer le montant de base
+            base_amount = 0
+            if subsidy.get("amount_per_ha"):
+                base_amount = float(subsidy.get("amount_per_ha", 0)) * area_ha
+            elif subsidy.get("funding_rate"):
+                # Extraire le taux numérique du texte (ex: "80%" -> 0.8)
+                try:
+                    rate_str = subsidy.get("funding_rate", "0%")
+                    rate = float(rate_str.strip("%")) / 100
+                    # Utiliser un coût moyen par ha si non spécifié dans le projet
+                    project_cost = project.get("cost", area_ha * 3000)  # Coût moyen de 3000€/ha
+                    base_amount = rate * project_cost
+                except (ValueError, TypeError):
+                    self.logger.warning(f"Format de taux de financement invalide: {subsidy.get('funding_rate')}")
+                    base_amount = 0
             
-            eligibility_conditions.append({
-                "condition": "Date limite respectée",
-                "satisfied": deadline_eligible,
-                "details": f"Date limite: {deadline_date.strftime('%d/%m/%Y')}"
-            })
+            # Appliquer les plafonds
+            if subsidy.get("max_funding") and base_amount > subsidy.get("max_funding"):
+                base_amount = float(subsidy.get("max_funding"))
             
-            if not deadline_eligible:
-                is_eligible = False
+            # Calculer les bonus
+            bonus_amount = 0
+            bonus_details = []
+            
+            # Exemple de bonus: certification forestière
+            if project.get("certifications") and "PEFC" in project.get("certifications", []):
+                bonus_pefc = base_amount * 0.1  # +10% pour certification PEFC
+                bonus_amount += bonus_pefc
+                bonus_details.append({
+                    "type": "Certification PEFC",
+                    "amount": bonus_pefc,
+                    "rate": "10%"
+                })
+            
+            # Exemple de bonus: zones prioritaires
+            if project.get("priority_zones") and any(zone in ["montagne", "france_relance"] for zone in project.get("priority_zones", [])):
+                bonus_zone = base_amount * 0.15  # +15% pour zones prioritaires
+                bonus_amount += bonus_zone
+                bonus_details.append({
+                    "type": "Zone prioritaire",
+                    "amount": bonus_zone,
+                    "rate": "15%"
+                })
+            
+            # Total
+            total_amount = base_amount + bonus_amount
+            
+            funding_details = {
+                "base_amount": round(base_amount, 2),
+                "bonus_amount": round(bonus_amount, 2),
+                "total_amount": round(total_amount, 2),
+                "details": {
+                    "area_ha": area_ha,
+                    "amount_per_ha": subsidy.get("amount_per_ha"),
+                    "funding_rate": subsidy.get("funding_rate"),
+                    "bonus_details": bonus_details
+                }
+            }
         
         # Résultat final
-        return {
+        result = {
             "eligible": is_eligible,
             "subsidy_id": subsidy.get("id"),
             "subsidy_title": subsidy.get("title"),
             "conditions": eligibility_conditions,
             "next_steps": subsidy.get("application_process", []) if is_eligible else [],
+            "funding_details": funding_details if is_eligible else None,
             "timestamp": datetime.now().isoformat()
         }
+        
+        return result
     
     def generate_application_documents(
         self,
@@ -509,10 +578,24 @@ class SubsidyAgent(BaseAgent):
             self.logger.warning(f"Le projet n'est pas éligible à la subvention {subsidy_id}")
             return {}
         
+        # Récupérer les données de la parcelle si disponible
+        parcel_data = {}
+        if project.get("location"):
+            try:
+                # Utiliser le service géo pour récupérer les infos de la parcelle
+                # Note: cette partie dépend de l'implémentation du GeoAgent
+                # Ce code est indicatif et doit être adapté à votre implémentation
+                from forestai.agents.geo_agent import GeoAgent
+                geo_agent = GeoAgent(self.config)
+                parcel_data = geo_agent.get_parcel_data(project["location"])
+            except Exception as e:
+                self.logger.warning(f"Impossible de récupérer les données de la parcelle: {e}")
+        
         # Préparer les données pour les documents
         document_data = {
             "subsidy": subsidy,
             "project": project,
+            "parcel": parcel_data,
             "applicant": applicant,
             "application_date": datetime.now().strftime("%d/%m/%Y"),
             "eligibility": eligibility
@@ -524,14 +607,23 @@ class SubsidyAgent(BaseAgent):
         for format_type in output_formats:
             try:
                 if format_type.lower() == "pdf":
-                    output_path = self.document_generator.generate_pdf(document_data, subsidy_id)
+                    output_path = self.document_generator.generate_application(
+                        subsidy, parcel_data, project, applicant, output_format="pdf"
+                    )
                     output_paths["pdf"] = output_path
+                    
                 elif format_type.lower() == "html":
-                    output_path = self.document_generator.generate_html(document_data, subsidy_id)
+                    output_path = self.document_generator.generate_application(
+                        subsidy, parcel_data, project, applicant, output_format="html"
+                    )
                     output_paths["html"] = output_path
+                    
                 elif format_type.lower() == "docx":
-                    output_path = self.document_generator.generate_docx(document_data, subsidy_id)
+                    output_path = self.document_generator.generate_application(
+                        subsidy, parcel_data, project, applicant, output_format="docx"
+                    )
                     output_paths["docx"] = output_path
+                    
                 else:
                     self.logger.warning(f"Format non supporté: {format_type}")
             except Exception as e:
