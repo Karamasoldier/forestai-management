@@ -310,3 +310,242 @@ def generate_species_comparison_chart(recommendations, base_filename, output_dir
     plt.close()
     
     print(f"Graphique comparatif généré: {chart_path}")
+
+def generate_advanced_report(geo_analysis, climate_zone, recommendations, output_dir):
+    """
+    Génère un rapport avancé combinant analyses géospatiales et climatiques.
+    
+    Args:
+        geo_analysis: Résultats de l'analyse géospatiale
+        climate_zone: Informations sur la zone climatique
+        recommendations: Recommandations d'espèces par scénario
+        output_dir: Répertoire de sortie pour le rapport
+    """
+    # Créer le répertoire de sortie
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Formater la date pour le nom de fichier
+    date_str = datetime.now().strftime("%Y%m%d")
+    
+    # Nom de base du fichier
+    base_filename = f"{date_str}_{geo_analysis['id']}_{geo_analysis['name'].replace(' ', '_')}"
+    
+    # Générer le rapport JSON
+    combined_analysis = {
+        "report_id": f"REP-{geo_analysis['id']}-{date_str}",
+        "parcel": {
+            "id": geo_analysis["id"],
+            "name": geo_analysis["name"],
+            "region": geo_analysis["region"],
+            "area_ha": geo_analysis["area_ha"]
+        },
+        "geo_analysis": geo_analysis,
+        "climate": {
+            "zone": climate_zone,
+            "current_recommendations": recommendations["current"][:5],
+            "future_recommendations": recommendations["2050_rcp45"][:5]
+        },
+        "integrated_analysis": {
+            "overall_score": round(
+                (geo_analysis["forestry_potential"]["potential_score"] * 0.5 +
+                recommendations["current"][0]["global_score"] * 0.3 +
+                recommendations["2050_rcp45"][0]["global_score"] * 0.2),
+                2
+            )
+        }
+    }
+    
+    # Déterminer la classe globale
+    overall_score = combined_analysis["integrated_analysis"]["overall_score"]
+    if overall_score >= 0.8:
+        combined_analysis["integrated_analysis"]["overall_class"] = "Excellent"
+    elif overall_score >= 0.7:
+        combined_analysis["integrated_analysis"]["overall_class"] = "Très bon"
+    elif overall_score >= 0.6:
+        combined_analysis["integrated_analysis"]["overall_class"] = "Bon"
+    elif overall_score >= 0.5:
+        combined_analysis["integrated_analysis"]["overall_class"] = "Moyen"
+    else:
+        combined_analysis["integrated_analysis"]["overall_class"] = "Faible"
+    
+    # Ajouter des recommandations personnalisées
+    combined_analysis["integrated_analysis"]["recommendations"] = []
+    
+    # Basé sur les contraintes et les opportunités
+    constraints = geo_analysis["forestry_potential"]["constraints"]
+    opportunities = geo_analysis["forestry_potential"]["opportunities"]
+    
+    for constraint in constraints:
+        if constraint == "pente_forte":
+            combined_analysis["integrated_analysis"]["recommendations"].append(
+                "Utiliser des techniques de plantation adaptées aux fortes pentes"
+            )
+        elif constraint in ["sécheresse_estivale", "sol_sec"]:
+            combined_analysis["integrated_analysis"]["recommendations"].append(
+                "Prévoir un système d'irrigation pendant la phase d'établissement"
+            )
+        elif constraint == "risque_incendie_élevé":
+            combined_analysis["integrated_analysis"]["recommendations"].append(
+                "Créer des coupures de combustible et maintenir un débroussaillage régulier"
+            )
+    
+    # Recommandations basées sur le climat futur
+    if recommendations["current"][0]["species_name"] != recommendations["2050_rcp45"][0]["species_name"]:
+        combined_analysis["integrated_analysis"]["recommendations"].append(
+            "Privilégier les espèces recommandées pour le climat futur pour anticiper le changement climatique"
+        )
+    
+    # Sauvegarder au format JSON
+    json_path = output_dir / f"{base_filename}.json"
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(combined_analysis, f, ensure_ascii=False, indent=2)
+    
+    print(f"Rapport JSON généré: {json_path}")
+    
+    # Générer un rapport texte formaté
+    txt_path = output_dir / f"{base_filename}.txt"
+    with open(txt_path, "w", encoding="utf-8") as f:
+        f.write(f"RAPPORT D'ANALYSE FORESTIÈRE - {geo_analysis['name']}\n")
+        f.write("="*80 + "\n\n")
+        
+        f.write(f"ID: {geo_analysis['id']}\n")
+        f.write(f"Région: {geo_analysis['region']}\n")
+        f.write(f"Surface: {geo_analysis['area_ha']:.2f} hectares\n\n")
+        
+        f.write("ANALYSE GÉOSPATIALE\n")
+        f.write("-"*80 + "\n")
+        f.write(f"Potentiel forestier: {geo_analysis['forestry_potential']['potential_class']} ({geo_analysis['forestry_potential']['potential_score']:.2f}/1.00)\n")
+        f.write(f"Sol: {geo_analysis['soil_analysis']['type']}, pH {geo_analysis['soil_analysis']['ph']:.1f}, matière organique {geo_analysis['soil_analysis']['organic_matter']:.1f}%\n")
+        f.write(f"Élévation moyenne: {geo_analysis['terrain_analysis']['elevation']['mean']:.1f} m\n")
+        f.write(f"Pente moyenne: {geo_analysis['terrain_analysis']['slope']['mean']:.1f}°\n")
+        f.write(f"Exposition dominante: {geo_analysis['terrain_analysis']['aspect']}\n")
+        f.write(f"Couvert forestier: {geo_analysis['land_cover']['forest_percentage']:.1f}% ({geo_analysis['land_cover']['dominant']})\n\n")
+        
+        f.write("Contraintes identifiées:\n")
+        for constraint in geo_analysis['forestry_potential']['constraints']:
+            f.write(f"- {constraint}\n")
+        f.write("\n")
+        
+        f.write("Opportunités identifiées:\n")
+        for opportunity in geo_analysis['forestry_potential']['opportunities']:
+            f.write(f"- {opportunity}\n")
+        f.write("\n")
+        
+        f.write("ANALYSE CLIMATIQUE\n")
+        f.write("-"*80 + "\n")
+        f.write(f"Zone climatique: {climate_zone['name']} ({climate_zone['climate_type']})\n")
+        f.write(f"Température annuelle: {climate_zone['annual_temp']}°C\n")
+        f.write(f"Précipitations: {climate_zone['annual_precip']} mm/an\n")
+        f.write(f"Jours de sécheresse estivale: {climate_zone['summer_drought_days']}\n")
+        f.write(f"Jours de gel: {climate_zone['frost_days']}\n\n")
+        
+        f.write("RECOMMANDATIONS D'ESPÈCES\n")
+        f.write("-"*80 + "\n")
+        
+        f.write("Climat actuel:\n")
+        for i, rec in enumerate(recommendations["current"][:5], 1):
+            f.write(f"{i}. {rec['species_name']} ({rec['common_name']})\n")
+            f.write(f"   Score: {rec['global_score']:.2f} | Compatibilité: {rec['compatibility']}\n")
+            f.write(f"   Risques: Sécheresse - {rec['risks'].get('drought', 'inconnu')}, Gel - {rec['risks'].get('frost', 'inconnu')}, Feu - {rec['risks'].get('fire', 'inconnu')}\n")
+            f.write(f"   Valeur économique: {rec['economic_value']} | Valeur écologique: {rec['ecological_value']} | Croissance: {rec['growth_rate']}\n\n")
+        
+        f.write("Climat 2050 (RCP 4.5):\n")
+        for i, rec in enumerate(recommendations["2050_rcp45"][:5], 1):
+            f.write(f"{i}. {rec['species_name']} ({rec['common_name']})\n")
+            f.write(f"   Score: {rec['global_score']:.2f} | Compatibilité: {rec['compatibility']}\n\n")
+        
+        f.write("ANALYSE INTÉGRÉE\n")
+        f.write("-"*80 + "\n")
+        f.write(f"Score global: {combined_analysis['integrated_analysis']['overall_score']:.2f}/1.00 ({combined_analysis['integrated_analysis']['overall_class']})\n\n")
+        
+        f.write("Recommandations de gestion:\n")
+        for rec in combined_analysis['integrated_analysis']['recommendations']:
+            f.write(f"- {rec}\n")
+    
+    print(f"Rapport texte généré: {txt_path}")
+    
+    # Générer un graphique comparatif des espèces recommandées
+    try:
+        generate_species_comparison_chart(recommendations, base_filename, output_dir)
+    except Exception as e:
+        print(f"Erreur lors de la génération du graphique: {e}")
+    
+    return combined_analysis
+
+def export_combined_results_to_csv(results, output_dir):
+    """
+    Exporte les résultats combinés au format CSV pour utilisation externe.
+    
+    Args:
+        results: Liste des résultats d'analyse combinée
+        output_dir: Répertoire de sortie
+    """
+    # Créer le répertoire de sortie
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Préparation des données pour l'export CSV
+    data = []
+    
+    for result in results:
+        # Informations de base sur la parcelle
+        parcel_data = {
+            "report_id": result["report_id"],
+            "parcel_id": result["parcel"]["id"],
+            "parcel_name": result["parcel"]["name"],
+            "region": result["parcel"]["region"],
+            "area_ha": result["parcel"]["area_ha"],
+            
+            # Analyse géospatiale
+            "geo_potential_score": result["geo_analysis"]["forestry_potential"]["potential_score"],
+            "geo_potential_class": result["geo_analysis"]["forestry_potential"]["potential_class"],
+            "soil_type": result["geo_analysis"]["soil_analysis"]["type"],
+            "soil_ph": result["geo_analysis"]["soil_analysis"]["ph"],
+            "elevation_mean": result["geo_analysis"]["terrain_analysis"]["elevation"]["mean"],
+            "slope_mean": result["geo_analysis"]["terrain_analysis"]["slope"]["mean"],
+            "aspect": result["geo_analysis"]["terrain_analysis"]["aspect"],
+            "forest_percentage": result["geo_analysis"]["land_cover"]["forest_percentage"],
+            
+            # Analyse climatique
+            "climate_zone": result["climate"]["zone"]["name"],
+            "climate_type": result["climate"]["zone"]["climate_type"],
+            "annual_temp": result["climate"]["zone"]["annual_temp"],
+            "annual_precip": result["climate"]["zone"]["annual_precip"],
+            
+            # Analyse intégrée
+            "overall_score": result["integrated_analysis"]["overall_score"],
+            "overall_class": result["integrated_analysis"]["overall_class"]
+        }
+        
+        # Ajouter les contraintes et opportunités comme colonnes
+        for i, constraint in enumerate(result["geo_analysis"]["forestry_potential"]["constraints"], 1):
+            parcel_data[f"constraint_{i}"] = constraint
+        
+        for i, opportunity in enumerate(result["geo_analysis"]["forestry_potential"]["opportunities"], 1):
+            parcel_data[f"opportunity_{i}"] = opportunity
+        
+        # Ajouter les recommandations comme colonnes
+        for i, recommendation in enumerate(result["integrated_analysis"].get("recommendations", []), 1):
+            parcel_data[f"recommendation_{i}"] = recommendation
+        
+        # Ajouter les espèces recommandées pour le climat actuel
+        for i, rec in enumerate(result["climate"]["current_recommendations"], 1):
+            parcel_data[f"current_species_{i}"] = rec["species_name"]
+            parcel_data[f"current_species_{i}_score"] = rec["global_score"]
+        
+        # Ajouter les espèces recommandées pour le climat futur
+        for i, rec in enumerate(result["climate"]["future_recommendations"], 1):
+            parcel_data[f"future_species_{i}"] = rec["species_name"]
+            parcel_data[f"future_species_{i}_score"] = rec["global_score"]
+        
+        data.append(parcel_data)
+    
+    # Créer un DataFrame
+    df = pd.DataFrame(data)
+    
+    # Exporter au format CSV
+    csv_path = output_dir / "parcelles_analyses_combinées.csv"
+    df.to_csv(csv_path, index=False, encoding="utf-8")
+    
+    print(f"Export CSV généré: {csv_path}")
