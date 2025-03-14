@@ -9,15 +9,32 @@ Ce document répertorie les modifications importantes apportées au projet Fores
 - Documentation des exemples d'utilisation (EXAMPLES.md) 
 - Feuille de route du projet (ROADMAP.md)
 - Documentation détaillée du SubsidyAgent
+- Guide d'intégration des agents (INTEGRATION.md)
 
 ### Implémenté
+- Architecture modulaire en couches avec interfaces standardisées
+- Infrastructure de base du système multi-agents
+  - Système de configuration centralisé
+  - Infrastructure de journalisation
+  - Bus de messages asynchrone
+- Agent de géotraitement (GeoAgent) 
+  - Recherche de parcelles cadastrales
+  - Analyse du potentiel forestier
+  - Détection des zones prioritaires
 - Agent de subventions (SubsidyAgent)
   - Module principal avec recherche et analyse d'éligibilité
   - Scrapers de subventions (BaseSubsidyScraper, FranceRelanceScraper)
   - Moteur d'analyse d'éligibilité avec règles avancées
   - Générateurs de documents (PDF, HTML, DOCX)
 - Système de cache pour les données de subventions
-- Exemple d'utilisation du SubsidyAgent
+- Intégration complète entre GeoAgent et SubsidyAgent
+  - Enrichissement des données de projet avec analyses géospatiales
+  - Utilisation des zones prioritaires pour la recherche de subventions
+  - Exemple pratique d'intégration
+
+### Amélioré
+- Interface en ligne de commande pour exécuter les agents
+- Documentation du système mise à jour
 
 ## [0.3.0] - 14/03/2025
 
