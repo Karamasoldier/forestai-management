@@ -1,321 +1,273 @@
-# forestai/agents/geo_agent/geo_agent.py
+"""
+Module GeoAgent - Agent de géotraitement pour ForestAI.
+"""
 
-import os
 import logging
-from typing import List, Dict, Any, Tuple
-import geopandas as gpd
-import pandas as pd
-from shapely.geometry import Point, Polygon
-import requests
-from anthropic import Anthropic
+import json
+from typing import Dict, Any, List, Optional, Union
 
-from ...core.utils.geo_utils import reproject_geometry
-from ..base_agent import BaseAgent
-from .cadastre import get_cadastre_data
-from .parcel_analyzer import analyze_parcel_potential
+from forestai.core.domain.base_agent import BaseAgent
+from forestai.core.domain.services.geo_service import GeoService
+from forestai.core.communication.message_bus import Message
+from forestai.core.utils.logging_config import log_function
+
+logger = logging.getLogger(__name__)
 
 class GeoAgent(BaseAgent):
     """
-    Agent chargé des analyses géospatiales des parcelles forestières.
-    
-    Fonctionnalités:
-    - Identification des parcelles à potentiel forestier
-    - Analyse de regroupement de petites parcelles
-    - Extraction de contacts des propriétaires via les mairies
-    - Génération de cartes et rapports
+    Agent de géotraitement pour l'analyse géospatiale des parcelles forestières.
     """
     
-    def __init__(self, config: Dict[str, Any]):
-        super().__init__(name="GeoAgent", config=config)
-        self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-        self.logger = logging.getLogger(__name__)
-        
-        # Initialiser les connexions aux API géospatiales
-        self.cadastre_api_key = os.environ.get("CADASTRE_API_KEY")
-        self.ign_api_key = os.environ.get("IGN_API_KEY")
-        
-        # Charger les couches de référence
-        self.load_reference_layers()
-        
-    def load_reference_layers(self):
-        """Charge les couches de référence nécessaires aux analyses."""
-        try:
-            # Couche des limites administratives
-            admin_boundaries_path = os.path.join(self.config["data_path"], "raw", "admin_boundaries.gpkg")
-            if os.path.exists(admin_boundaries_path):
-                self.admin_boundaries = gpd.read_file(admin_boundaries_path)
-            else:
-                self.admin_boundaries = gpd.GeoDataFrame()
-                self.logger.warning("Fichier des limites administratives non trouvé")
-            
-            # Couche des zones forestières existantes
-            forest_areas_path = os.path.join(self.config["data_path"], "raw", "forest_areas.gpkg")
-            if os.path.exists(forest_areas_path):
-                self.forest_areas = gpd.read_file(forest_areas_path)
-            else:
-                self.forest_areas = gpd.GeoDataFrame()
-                self.logger.warning("Fichier des zones forestières non trouvé")
-            
-            # Couche des types de sols
-            soil_types_path = os.path.join(self.config["data_path"], "raw", "soil_types.gpkg")
-            if os.path.exists(soil_types_path):
-                self.soil_types = gpd.read_file(soil_types_path)
-            else:
-                self.soil_types = gpd.GeoDataFrame()
-                self.logger.warning("Fichier des types de sols non trouvé")
-            
-            self.logger.info("Chargement des couches de référence terminé")
-        except Exception as e:
-            self.logger.error(f"Erreur lors du chargement des couches de référence: {e}")
-            # Créer des GeoDataFrames vides en cas d'échec
-            self.admin_boundaries = gpd.GeoDataFrame()
-            self.forest_areas = gpd.GeoDataFrame()
-            self.soil_types = gpd.GeoDataFrame()
-    
-    def _execute(self):
-        """Implémentation de la méthode d'exécution de l'agent."""
-        self.logger.info("Exécution de l'agent GeoAgent")
-        
-        # Traiter les tâches en attente
-        while self.is_running and self.tasks_queue:
-            task = self.tasks_queue.pop(0)
-            
-            try:
-                task_type = task.get("type")
-                
-                if task_type == "find_parcels":
-                    department = task.get("department")
-                    min_area = task.get("min_area", 1.0)
-                    max_slope = task.get("max_slope", 30.0)
-                    
-                    self.logger.info(f"Recherche de parcelles dans le département {department}")
-                    parcels = self.find_profitable_parcels(department, min_area, max_slope)
-                    
-                    # Enregistrer les résultats
-                    output_path = os.path.join(
-                        self.config["output_path"], 
-                        f"parcels_{department}.geojson"
-                    )
-                    if not parcels.empty:
-                        parcels.to_file(output_path, driver="GeoJSON")
-                        self.logger.info(f"Résultats enregistrés dans {output_path}")
-                
-                elif task_type == "analyze_clustering":
-                    geojson_path = task.get("geojson_path")
-                    max_distance = task.get("max_distance", 100.0)
-                    
-                    if geojson_path and os.path.exists(geojson_path):
-                        parcels = gpd.read_file(geojson_path)
-                        clusters = self.analyze_small_parcels_clustering(
-                            parcels, max_distance
-                        )
-                        
-                        # Enregistrer les résultats
-                        output_path = os.path.join(
-                            self.config["output_path"], 
-                            f"clusters_{os.path.basename(geojson_path)}"
-                        )
-                        if clusters.get("clusters"):
-                            gpd.GeoDataFrame(clusters["clusters"]).to_file(
-                                output_path, driver="GeoJSON"
-                            )
-                            self.logger.info(f"Clusters enregistrés dans {output_path}")
-                
-                elif task_type == "get_contacts":
-                    department = task.get("department")
-                    parcel_ids = task.get("parcel_ids")
-                    
-                    contacts = self.get_municipality_contacts(department, parcel_ids)
-                    
-                    # Enregistrer les résultats
-                    output_path = os.path.join(
-                        self.config["output_path"], 
-                        f"contacts_{department}.csv"
-                    )
-                    
-                    if contacts:
-                        pd.DataFrame.from_dict(contacts, orient="index").to_csv(output_path)
-                        self.logger.info(f"Contacts enregistrés dans {output_path}")
-                
-                else:
-                    self.logger.warning(f"Type de tâche inconnu: {task_type}")
-            
-            except Exception as e:
-                self.logger.error(f"Erreur lors du traitement de la tâche: {e}", exc_info=True)
-    
-    def find_profitable_parcels(self, 
-                               department_code: str, 
-                               min_area: float = 1.0,
-                               max_slope: float = 30.0) -> gpd.GeoDataFrame:
+    def __init__(self, config: Optional[Dict[str, Any]] = None, agent_id: Optional[str] = None,
+                 subscribe_topics: Optional[List[str]] = None):
         """
-        Identifie les parcelles à potentiel forestier dans un département.
+        Initialise l'agent de géotraitement.
         
         Args:
-            department_code: Code du département (ex: "01", "2A")
-            min_area: Surface minimale en hectares
-            max_slope: Pente maximale en degrés
-            
-        Returns:
-            GeoDataFrame avec les parcelles identifiées et leurs attributs
+            config: Configuration de l'agent (optionnel)
+            agent_id: Identifiant de l'agent (optionnel)
+            subscribe_topics: Liste des sujets auxquels s'abonner (optionnel)
         """
-        self.logger.info(f"Recherche de parcelles dans le département {department_code}")
-        
-        try:
-            # Simulation: dans une implémentation réelle, cette fonction appellerait 
-            # l'API cadastrale et effectuerait des analyses spatiales complexes
-            self.logger.info("Simulation: Appel à l'API cadastrale")
-            
-            # Exemple de données retournées
-            # En production, ceci appelerait get_cadastre_data() pour obtenir les vraies données
-            example_data = {
-                "features": [
-                    {
-                        "type": "Feature",
-                        "properties": {
-                            "id": f"{department_code}0001",
-                            "nature": "AB",  # Non forestier
-                            "area_ha": 2.5,
-                            "owner_id": "OWNER1",
-                            "commune_code": f"{department_code}001"
-                        },
-                        "geometry": {
-                            "type": "Polygon",
-                            "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
-                        }
-                    },
-                    {
-                        "type": "Feature",
-                        "properties": {
-                            "id": f"{department_code}0002",
-                            "nature": "AB",  # Non forestier
-                            "area_ha": 3.8,
-                            "owner_id": "OWNER2",
-                            "commune_code": f"{department_code}001"
-                        },
-                        "geometry": {
-                            "type": "Polygon",
-                            "coordinates": [[[1, 0], [1, 1], [2, 1], [2, 0], [1, 0]]]
-                        }
-                    }
-                ]
-            }
-            
-            # Créer un GeoDataFrame à partir des données d'exemple
-            gdf = gpd.GeoDataFrame.from_features(example_data["features"])
-            gdf["forestry_potential"] = [0.75, 0.82]  # Simulation de l'analyse
-            gdf["department"] = department_code
-            
-            return gdf
-            
-        except Exception as e:
-            self.logger.error(f"Erreur lors de la recherche de parcelles: {e}")
-            return gpd.GeoDataFrame()
-    
-    def analyze_small_parcels_clustering(self, 
-                                        parcels_gdf: gpd.GeoDataFrame,
-                                        max_distance: float = 100.0,
-                                        min_cluster_size: int = 3) -> Dict[str, Any]:
-        """
-        Analyse les possibilités de regroupement de petites parcelles.
-        
-        Args:
-            parcels_gdf: GeoDataFrame des parcelles à analyser
-            max_distance: Distance maximale entre parcelles pour regroupement (m)
-            min_cluster_size: Nombre minimum de parcelles pour former un groupe
-            
-        Returns:
-            Dictionnaire avec clusters identifiés et métriques
-        """
-        self.logger.info("Analyse de regroupement de parcelles")
-        
-        # Simulation: en production, cette fonction effectuerait une analyse spatiale réelle
-        
-        # Exemple de résultat
-        clusters = [
-            {
-                "id": 1,
-                "parcels": [0, 1],
-                "area_ha": 6.3,
-                "owner_count": 2,
-                "geometry": parcels_gdf.unary_union,
-                "analysis": "Ce groupe de parcelles présente un bon potentiel de regroupement forestier."
-            }
+        # Sujets par défaut
+        default_topics = [
+            "PARCEL_ANALYSIS_REQUESTED",
+            "MAP_GENERATION_REQUESTED",
+            "PRIORITY_ZONE_DETECTION_REQUESTED"
         ]
         
-        return {
-            "clusters": clusters,
-            "metrics": {
-                "cluster_count": len(clusters),
-                "total_parcels": 2,
-                "total_area_ha": 6.3
-            }
-        }
+        # Combiner les sujets par défaut et les sujets spécifiés
+        all_topics = list(set(default_topics + (subscribe_topics or [])))
         
-    def get_municipality_contacts(self, 
-                                 department_code: str,
-                                 parcel_ids: List[str] = None) -> Dict[str, Dict]:
-        """
-        Récupère les contacts des mairies pour les parcelles spécifiées.
+        # Initialiser la classe parent
+        super().__init__(config, agent_id, all_topics)
         
-        Args:
-            department_code: Code du département
-            parcel_ids: Liste d'identifiants de parcelles (optionnel)
-            
-        Returns:
-            Dictionnaire des contacts par commune
-        """
-        self.logger.info(f"Récupération des contacts mairies pour département {department_code}")
+        # Initialiser le service de géotraitement
+        self.geo_service = GeoService(self.config.as_dict())
         
-        # Simulation: en production, cette fonction appellerait une API réelle
-        
-        # Exemple de résultat
-        return {
-            f"{department_code}001": {
-                "nom": "Commune Test",
-                "adresse": "1 Place de la Mairie, 01000 Commune Test",
-                "telephone": "04 00 00 00 00",
-                "email": "mairie@commune-test.fr",
-                "site_web": "http://www.commune-test.fr",
-                "horaires": "Lundi-Vendredi: 9h-12h, 14h-17h"
-            }
-        }
+        logger.info(f"GeoAgent initialized: {self.agent_id}")
     
-    def generate_report(self, 
-                       parcels_gdf: gpd.GeoDataFrame,
-                       clusters_data: Dict[str, Any] = None,
-                       municipality_contacts: Dict[str, Dict] = None) -> Dict[str, Any]:
+    @log_function
+    def handle_message(self, message: Message) -> None:
         """
-        Génère un rapport complet d'analyse des parcelles.
+        Gère les messages reçus.
         
         Args:
-            parcels_gdf: GeoDataFrame des parcelles analysées
-            clusters_data: Données de clustering (optionnel)
-            municipality_contacts: Contacts des mairies (optionnel)
+            message: Message reçu
+        """
+        topic = message.topic
+        data = message.data
+        
+        logger.info(f"GeoAgent handling message: {topic}")
+        
+        if topic == "PARCEL_ANALYSIS_REQUESTED":
+            # Analyser une parcelle
+            parcel_id = data.get("parcel_id")
+            geometry = data.get("geometry")
+            
+            try:
+                analysis_result = self.geo_service.analyze_potential(parcel_id, geometry)
+                
+                # Publier le résultat
+                self.publish_message("PARCEL_ANALYSIS_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "parcel_id": parcel_id,
+                    "result": analysis_result,
+                    "status": "success"
+                })
+            except Exception as e:
+                logger.exception(f"Error analyzing parcel: {str(e)}")
+                
+                # Publier l'erreur
+                self.publish_message("PARCEL_ANALYSIS_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "parcel_id": parcel_id,
+                    "status": "error",
+                    "error_message": str(e)
+                })
+        
+        elif topic == "MAP_GENERATION_REQUESTED":
+            # Générer une carte
+            parcel_id = data.get("parcel_id")
+            map_type = data.get("map_type", "vegetation")
+            output_format = data.get("output_format", "png")
+            include_basemap = data.get("include_basemap", True)
+            
+            try:
+                map_path = self.geo_service.generate_map(
+                    parcel_id, map_type, output_format, include_basemap
+                )
+                
+                # Publier le résultat
+                self.publish_message("MAP_GENERATION_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "parcel_id": parcel_id,
+                    "map_path": map_path,
+                    "status": "success"
+                })
+            except Exception as e:
+                logger.exception(f"Error generating map: {str(e)}")
+                
+                # Publier l'erreur
+                self.publish_message("MAP_GENERATION_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "parcel_id": parcel_id,
+                    "status": "error",
+                    "error_message": str(e)
+                })
+        
+        elif topic == "PRIORITY_ZONE_DETECTION_REQUESTED":
+            # Détecter les zones prioritaires
+            parcel_id = data.get("parcel_id")
+            
+            try:
+                priority_zones = self.geo_service.detect_priority_zones(parcel_id)
+                
+                # Publier le résultat
+                self.publish_message("PRIORITY_ZONE_DETECTION_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "parcel_id": parcel_id,
+                    "priority_zones": priority_zones,
+                    "status": "success"
+                })
+            except Exception as e:
+                logger.exception(f"Error detecting priority zones: {str(e)}")
+                
+                # Publier l'erreur
+                self.publish_message("PRIORITY_ZONE_DETECTION_COMPLETED", {
+                    "request_id": data.get("request_id"),
+                    "parcel_id": parcel_id,
+                    "status": "error",
+                    "error_message": str(e)
+                })
+    
+    @log_function
+    def execute_action(self, action: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Exécute une action.
+        
+        Args:
+            action: Action à exécuter
+            params: Paramètres de l'action
             
         Returns:
-            Dictionnaire contenant les données du rapport et chemins des fichiers générés
+            Résultat de l'action
         """
-        self.logger.info("Génération du rapport d'analyse")
+        logger.info(f"GeoAgent executing action: {action}")
         
-        # Préparer le contexte pour le rapport
-        context = {
-            "date": pd.Timestamp.now().strftime("%Y-%m-%d"),
-            "parcels_count": len(parcels_gdf),
-            "total_area": parcels_gdf["area_ha"].sum() if "area_ha" in parcels_gdf.columns else 0,
-            "department": parcels_gdf["department"].iloc[0] if "department" in parcels_gdf.columns else "N/A",
-            "profitable_parcels": parcels_gdf,
-            "clusters_data": clusters_data,
-            "municipality_contacts": municipality_contacts,
-        }
+        try:
+            if action == "search_parcels":
+                # Rechercher des parcelles
+                commune = params.get("commune")
+                section = params.get("section")
+                
+                if not commune:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: commune"
+                    }
+                
+                result = self.geo_service.search_parcels(commune, section)
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            elif action == "get_parcel_geometry":
+                # Récupérer la géométrie d'une parcelle
+                parcel_id = params.get("parcel_id")
+                
+                if not parcel_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: parcel_id"
+                    }
+                
+                result = self.geo_service.get_parcel_geometry(parcel_id)
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            elif action == "get_parcel_data":
+                # Récupérer les données d'une parcelle
+                parcel_id = params.get("parcel_id")
+                
+                if not parcel_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: parcel_id"
+                    }
+                
+                result = self.geo_service.get_parcel_data(parcel_id)
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            elif action == "analyze_potential":
+                # Analyser le potentiel forestier
+                parcel_id = params.get("parcel_id")
+                geometry = params.get("geometry")
+                
+                if not parcel_id and not geometry:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: either parcel_id or geometry must be provided"
+                    }
+                
+                result = self.geo_service.analyze_potential(parcel_id, geometry)
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            elif action == "detect_priority_zones":
+                # Détecter les zones prioritaires
+                parcel_id = params.get("parcel_id")
+                
+                if not parcel_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: parcel_id"
+                    }
+                
+                result = self.geo_service.detect_priority_zones(parcel_id)
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            elif action == "generate_map":
+                # Générer une carte
+                parcel_id = params.get("parcel_id")
+                map_type = params.get("map_type", "vegetation")
+                output_format = params.get("output_format", "png")
+                include_basemap = params.get("include_basemap", True)
+                
+                if not parcel_id:
+                    return {
+                        "status": "error",
+                        "error_message": "Missing required parameter: parcel_id"
+                    }
+                
+                result = self.geo_service.generate_map(
+                    parcel_id, map_type, output_format, include_basemap
+                )
+                return {
+                    "status": "success",
+                    "result": result
+                }
+            
+            else:
+                # Action inconnue
+                return {
+                    "status": "error",
+                    "error_message": f"Unknown action: {action}"
+                }
         
-        # Simulation: en production, cette fonction générerait une carte et une analyse complète
-        
-        # Exemple de résultat
-        context["map_path"] = None
-        context["geojson_path"] = None
-        context["analysis"] = """
-        Analyse des parcelles à potentiel forestier dans le département XX. 
-        Ce rapport identifie plusieurs opportunités d'investissement forestier...
-        """
-        
-        return context
+        except Exception as e:
+            logger.exception(f"Error executing action {action}: {str(e)}")
+            return {
+                "status": "error",
+                "error_message": str(e)
+            }
