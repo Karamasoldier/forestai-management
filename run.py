@@ -1,157 +1,175 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+"""
+Script principal pour exécuter les agents ForestAI.
+
+Usage:
+    python run.py [--agent AGENT_NAME] [--action ACTION_NAME] [--params JSON_PARAMS]
+
+Exemples:
+    # Lancer le système complet
+    python run.py
+
+    # Utiliser un agent spécifique
+    python run.py --agent geoagent
+
+    # Rechercher des parcelles dans une commune spécifique
+    python run.py --agent geoagent --action search_parcels --params '{"commune": "Saint-Martin-de-Crau", "section": "B"}'
+
+    # Vérifier la conformité réglementaire d'une parcelle
+    python run.py --agent reglementation --action check_compliance --params '{"parcels": ["123456789"], "project_type": "boisement"}'
+
+    # Rechercher des subventions pour un type de projet
+    python run.py --agent subsidy --action search_subsidies --params '{"project_type": "reboisement", "region": "Occitanie"}'
+"""
 
 import os
 import sys
 import argparse
-import logging
 import json
-from dotenv import load_dotenv
+import logging
+import signal
+import time
+from typing import Dict, Any, Optional
 
-# Charger les variables d'environnement
-load_dotenv()
+from forestai.core.utils.config import Config
+from forestai.core.utils.logging_config import LoggingConfig
+from forestai.agents.geo_agent import GeoAgent
+from forestai.agents.subsidy_agent import SubsidyAgent
 
 # Configuration du logging
-logging.basicConfig(
-    level=getattr(logging, os.getenv("LOG_LEVEL", "INFO")),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("forestai.log")
-    ]
-)
+LoggingConfig.get_instance().init({
+    "level": "INFO",
+    "log_dir": "logs",
+    "format_string": "%(asctime)s - %(name)s - [%(levelname)s] - %(message)s"
+})
 
 logger = logging.getLogger("forestai")
 
-def main():
-    # Définir les arguments de ligne de commande
-    parser = argparse.ArgumentParser(description="ForestAI - Système de gestion forestière")
-    parser.add_argument(
-        "--agent", 
-        type=str,
-        choices=["geoagent", "reglementation", "subsidy", "diagnostic", "document", "operator"],
-        help="Agent spécifique à exécuter"
-    )
-    parser.add_argument(
-        "--config", 
-        type=str,
-        default="config.json",
-        help="Chemin vers le fichier de configuration"
-    )
-    parser.add_argument(
-        "--action", 
-        type=str,
-        help="Action spécifique à effectuer par l'agent"
-    )
-    parser.add_argument(
-        "--params", 
-        type=str,
-        help="Paramètres JSON pour l'action"
-    )
+# Agents disponibles
+AVAILABLE_AGENTS = {
+    "geoagent": GeoAgent,
+    "subsidy": SubsidyAgent,
+    # "reglementation": ReglementationAgent,  # À décommenter une fois implémenté
+}
+
+def parse_arguments():
+    """
+    Parse les arguments de la ligne de commande.
     
-    args = parser.parse_args()
+    Returns:
+        Les arguments parsés
+    """
+    parser = argparse.ArgumentParser(description='ForestAI - Gestion Forestière Intelligente')
+    parser.add_argument('--agent', type=str, help='Agent à utiliser (geoagent, subsidy, reglementation, etc.)')
+    parser.add_argument('--action', type=str, help='Action à exécuter')
+    parser.add_argument('--params', type=str, help='Paramètres de l\'action au format JSON')
+    
+    return parser.parse_args()
+
+def handle_exit(signum, frame):
+    """
+    Gestionnaire de signal pour une sortie propre.
+    """
+    logger.info("Exiting ForestAI...")
+    sys.exit(0)
+
+def run_agent(agent_name: str, action: Optional[str] = None, params: Optional[Dict[str, Any]] = None):
+    """
+    Exécute un agent spécifique.
+    
+    Args:
+        agent_name: Nom de l'agent
+        action: Action à exécuter (optionnel)
+        params: Paramètres de l'action (optionnel)
+    """
+    # Vérifier si l'agent existe
+    if agent_name not in AVAILABLE_AGENTS:
+        logger.error(f"Agent '{agent_name}' not found. Available agents: {', '.join(AVAILABLE_AGENTS.keys())}")
+        return
     
     # Charger la configuration
-    config_path = args.config
-    if not os.path.exists(config_path):
-        # Utiliser la configuration par défaut
-        config = {
-            "data_path": os.getenv("DATA_PATH", "./data"),
-            "output_path": os.getenv("OUTPUT_PATH", "./data/outputs"),
-            "db": {
-                "host": os.getenv("DB_HOST", "localhost"),
-                "port": int(os.getenv("DB_PORT", 5432)),
-                "name": os.getenv("DB_NAME", "forestai"),
-                "user": os.getenv("DB_USER", "postgres"),
-                "password": os.getenv("DB_PASSWORD", "")
-            },
-            "api": {
-                "port": int(os.getenv("UI_PORT", 8000)),
-                "debug": os.getenv("DEBUG", "False").lower() == "true"
-            }
-        }
-    else:
-        with open(config_path, "r") as f:
-            config = json.load(f)
+    config = Config.get_instance()
+    config.load_config(".env")
     
-    # Vérifier et créer les répertoires nécessaires
-    os.makedirs(config["data_path"], exist_ok=True)
-    os.makedirs(config["output_path"], exist_ok=True)
-    os.makedirs(os.path.join(config["data_path"], "raw"), exist_ok=True)
-    os.makedirs(os.path.join(config["data_path"], "processed"), exist_ok=True)
-    os.makedirs(os.path.join(config["data_path"], "cache"), exist_ok=True)
-    os.makedirs(os.path.join(config["data_path"], "reglementation"), exist_ok=True)
-    
-    # Exécuter l'agent spécifié ou le système complet
-    if args.agent:
-        run_specific_agent(args.agent, config, args.action, args.params)
-    else:
-        run_full_system(config)
-
-def run_specific_agent(agent_name, config, action=None, params=None):
-    """Exécute un agent spécifique avec les paramètres fournis."""
-    logger.info(f"Démarrage de l'agent {agent_name}")
+    # Initialiser l'agent
+    agent_class = AVAILABLE_AGENTS[agent_name]
+    agent = agent_class(config.as_dict())
+    logger.info(f"Agent '{agent_name}' initialized")
     
     try:
-        # Importer dynamiquement l'agent
-        if agent_name == "geoagent":
-            # Note: à implémenter quand la structure sera créée
-            from forestai.agents.geo_agent.geo_agent import GeoAgent
-            agent = GeoAgent(config)
-        elif agent_name == "reglementation":
-            from forestai.agents.reglementation_agent.reglementation_agent import ReglementationAgent
-            agent = ReglementationAgent(config)
-        elif agent_name == "subsidy":
-            from forestai.agents.subsidy_agent.subsidy_agent import SubsidyAgent
-            agent = SubsidyAgent(config)
-        elif agent_name == "diagnostic":
-            from forestai.agents.diagnostic_agent.diagnostic_agent import DiagnosticAgent
-            agent = DiagnosticAgent(config)
-        elif agent_name == "document":
-            from forestai.agents.document_agent.document_agent import DocumentAgent
-            agent = DocumentAgent(config)
-        elif agent_name == "operator":
-            from forestai.agents.operator_agent.operator_agent import OperatorAgent
-            agent = OperatorAgent(config)
-        else:
-            logger.error(f"Agent inconnu: {agent_name}")
-            return
-        
-        # Exécuter l'action spécifiée
         if action:
-            if hasattr(agent, action) and callable(getattr(agent, action)):
-                if params:
-                    # Convertir les paramètres JSON en dict
-                    params_dict = json.loads(params)
-                    result = getattr(agent, action)(**params_dict)
-                else:
-                    result = getattr(agent, action)()
-                
-                logger.info(f"Résultat de {action}: {result}")
-            else:
-                logger.error(f"Action inconnue pour l'agent {agent_name}: {action}")
-        else:
-            # Action par défaut: exécuter l'agent
-            agent.run()
+            # Exécuter une action spécifique
+            logger.info(f"Executing action '{action}' with params: {params}")
+            result = agent.execute_action(action, params or {})
             
-    except ImportError as e:
-        logger.error(f"Erreur d'importation de l'agent {agent_name}: {e}")
-        logger.info("L'agent n'est probablement pas encore implémenté.")
-    except Exception as e:
-        logger.error(f"Erreur lors de l'exécution de l'agent {agent_name}: {e}", exc_info=True)
+            # Afficher le résultat
+            if result["status"] == "success":
+                print(json.dumps(result["result"], indent=2, ensure_ascii=False))
+            else:
+                logger.error(f"Error executing action: {result.get('error_message', 'Unknown error')}")
+        else:
+            # Mode interactif - l'agent écoute les messages
+            logger.info(f"Running agent '{agent_name}' in interactive mode (Ctrl+C to exit)")
+            while True:
+                time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info(f"Agent '{agent_name}' stopped")
+    finally:
+        # Nettoyer les ressources de l'agent
+        agent.unsubscribe_all()
 
-def run_full_system(config):
-    """Exécute le système complet avec tous les agents."""
-    logger.info("Démarrage du système ForestAI complet")
+def run_system():
+    """
+    Exécute le système complet avec tous les agents.
+    """
+    # Charger la configuration
+    config = Config.get_instance()
+    config.load_config(".env")
+    
+    # Initialiser tous les agents
+    agents = {}
+    for agent_name, agent_class in AVAILABLE_AGENTS.items():
+        agents[agent_name] = agent_class(config.as_dict())
+        logger.info(f"Agent '{agent_name}' initialized")
+    
+    logger.info("ForestAI system running (Ctrl+C to exit)")
     
     try:
-        # Démarrer l'API REST pour l'interface utilisateur
-        from forestai.core.api.app import start_api
-        start_api(config)
-    except ImportError:
-        logger.warning("API REST non implémentée. Exécution des agents en mode CLI uniquement.")
-        # Exécuter les agents disponibles en séquence
-        for agent in ["geoagent", "reglementation", "subsidy", "diagnostic", "document", "operator"]:
-            run_specific_agent(agent, config)
+        # Boucle principale
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("ForestAI system stopped")
+    finally:
+        # Nettoyer les ressources de tous les agents
+        for agent in agents.values():
+            agent.unsubscribe_all()
+
+def main():
+    """
+    Fonction principale.
+    """
+    # Configurer le gestionnaire de signal pour une sortie propre
+    signal.signal(signal.SIGINT, handle_exit)
+    signal.signal(signal.SIGTERM, handle_exit)
+    
+    # Parser les arguments
+    args = parse_arguments()
+    
+    # Interpréter les paramètres JSON si fournis
+    params = None
+    if args.params:
+        try:
+            params = json.loads(args.params)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON params: {e}")
+            return
+    
+    # Exécuter le système ou un agent spécifique
+    if args.agent:
+        run_agent(args.agent, args.action, params)
+    else:
+        run_system()
 
 if __name__ == "__main__":
     main()
