@@ -30,6 +30,7 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 - [Guide d'installation](docs/INSTALLATION.md) - Instructions d'installation et prérequis
 - [Exemples d'utilisation](docs/EXAMPLES.md) - Guide pratique avec exemples de code
 - [Plan d'exécution](docs/ROADMAP.md) - Roadmap, phases de développement et état d'avancement
+- [API REST](docs/API.md) - Documentation de l'API REST
 
 ## Guide rapide d'installation
 
@@ -49,6 +50,8 @@ cp .env.example .env
 
 ## Utilisation rapide
 
+### Mode ligne de commande
+
 ```bash
 # Lancer le système complet
 python run.py
@@ -64,6 +67,19 @@ python run.py --agent reglementation --action check_compliance --params '{"parce
 
 # Rechercher des subventions pour un type de projet
 python run.py --agent subsidy --action search_subsidies --params '{"project_type": "reboisement", "region": "Occitanie"}'
+```
+
+### Mode API REST
+
+```bash
+# Démarrer le serveur API
+python api_server.py
+
+# Accéder à la documentation interactive
+# Ouvrir http://localhost:8000/docs dans un navigateur
+
+# Exemples d'utilisation de l'API
+python examples/api_usage_example.py
 ```
 
 ## Documentation des agents spécifiques
