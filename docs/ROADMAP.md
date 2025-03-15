@@ -53,13 +53,16 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - ⏳ Implémentation des tests de régression automatisés
 - ⏳ Authentification et sécurisation de l'API REST
 
-## Phase 3: Agents avancés (🔜 Prochainement)
+## Phase 3: Agents avancés (🔄 En cours)
 
 Cette phase se concentre sur le développement d'agents spécialisés plus avancés.
 
+### Objectifs en cours
+
+- 🔄 Implémentation du DiagnosticAgent pour l'analyse des données terrain
+
 ### Objectifs planifiés
 
-- ⏳ Implémentation du DiagnosticAgent pour l'analyse des données terrain
 - ⏳ Développement du DocumentAgent pour la génération de documents administratifs
 - ⏳ Création de l'ExploitantAgent pour la gestion des opérateurs forestiers
 - ⏳ Système avancé de recommandation d'espèces basé sur ML
@@ -101,7 +104,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
 | SubsidyAgent | 80% | Structure principale et génération de documents complètes, intégration avancée réalisée |
-| DiagnosticAgent | 5% | Conception préliminaire, implémentation à venir |
+| DiagnosticAgent | 40% | Structure de base implémentée, analyseur d'inventaire forestier et générateur de rapports développés |
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
 | API REST | 90% | Endpoints principaux implémentés, documentation OpenAPI complète, tests unitaires en place |
@@ -116,8 +119,8 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
   - Authentification et sécurisation de l'API REST
   - Documentation inter-agents
 
-- **Q3 2025**: Début Phase 3
-  - Implémentation du DiagnosticAgent V1
+- **Q3 2025**: Suite Phase 3
+  - Finalisation du DiagnosticAgent V1
   - Intégration des données de télédétection
   - Premiers modules du DocumentAgent
   - Interface utilisateur web basique
