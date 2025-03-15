@@ -15,6 +15,7 @@ from forestai.agents.diagnostic_agent.report_generator.formatters.pdf_formatter 
 from forestai.agents.diagnostic_agent.report_generator.formatters.docx_formatter import DOCXFormatter
 from forestai.agents.diagnostic_agent.report_generator.formatters.txt_formatter import TXTFormatter
 from forestai.agents.diagnostic_agent.report_generator.formatters.json_formatter import JSONFormatter
+from forestai.agents.diagnostic_agent.report_generator.formatters.health_section_formatter import HealthSectionFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,9 @@ class ReportGenerator:
             ReportFormat.TXT: TXTFormatter(self.templates_dir, self.output_dir),
             ReportFormat.JSON: JSONFormatter(self.templates_dir, self.output_dir)
         }
+        
+        # Formateur de section sanitaire spécifique
+        self.health_formatter = HealthSectionFormatter()
     
     def _create_default_templates(self):
         """Crée les templates par défaut s'ils n'existent pas déjà."""
@@ -196,6 +200,19 @@ class ReportGenerator:
             border-left: 5px solid #e67e22;
             margin: 15px 0;
         }
+        .health-section {
+            background-color: #f0f8f0;
+            border: 1px solid #c8e6c8;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .health-section h2 {
+            color: #2d682d;
+        }
+        .health-section h3 {
+            color: #3c8c3c;
+        }
         @media print {
             body {
                 font-size: 12px;
@@ -264,6 +281,12 @@ class ReportGenerator:
             </tr>
         </table>
     </section>
+
+    {% if health_section %}
+    <section class="health">
+        {{ health_section|safe }}
+    </section>
+    {% endif %}
 
     {% if inventory_analysis %}
     <section class="inventory">
@@ -482,6 +505,13 @@ Propriétaire: {{ parcel_owner }}
 Type de peuplement: {{ forest_type }}
 Exposition: {{ parcel_exposition }}
 
+{% if health_summary %}
+ÉTAT SANITAIRE
+{{ "-"*80 }}
+{{ health_summary }}
+
+{% endif %}
+
 {% if inventory_analysis %}
 ANALYSE DE L'INVENTAIRE FORESTIER
 {{ "-"*80 }}
@@ -559,7 +589,8 @@ Rapport généré par {{ company_name }} - {{ date }}
                 f.write(txt_template)
     
     def generate_report(self, diagnostic_data: Dict[str, Any], report_format: Union[ReportFormat, str],
-                       template_name: Optional[str] = None, output_path: Optional[Path] = None) -> Path:
+                       template_name: Optional[str] = None, output_path: Optional[Path] = None,
+                       health_detail_level: str = "standard") -> Path:
         """Génère un rapport de diagnostic forestier.
         
         Args:
@@ -567,6 +598,7 @@ Rapport généré par {{ company_name }} - {{ date }}
             report_format: Format de sortie du rapport
             template_name: Nom du template à utiliser (optionnel)
             output_path: Chemin du fichier de sortie (optionnel)
+            health_detail_level: Niveau de détail pour la section sanitaire ('minimal', 'standard', 'complet')
             
         Returns:
             Chemin du fichier généré
@@ -592,7 +624,7 @@ Rapport généré par {{ company_name }} - {{ date }}
                 template_name = "diagnostic_report.html"
         
         # Préparer les données pour le template
-        context = self._prepare_template_context(diagnostic_data)
+        context = self._prepare_template_context(diagnostic_data, health_detail_level)
         
         # Récupérer le formateur approprié
         formatter = self.formatters.get(report_format)
@@ -602,11 +634,12 @@ Rapport généré par {{ company_name }} - {{ date }}
         # Générer le rapport
         return formatter.generate(context, template_name, output_path)
     
-    def _prepare_template_context(self, diagnostic_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_template_context(self, diagnostic_data: Dict[str, Any], health_detail_level: str = "standard") -> Dict[str, Any]:
         """Prépare le contexte pour le template de rapport.
         
         Args:
             diagnostic_data: Données du diagnostic
+            health_detail_level: Niveau de détail pour la section sanitaire
             
         Returns:
             Contexte formaté pour le template
@@ -642,6 +675,32 @@ Rapport généré par {{ company_name }} - {{ date }}
             "climate_analysis": diagnostic_data.get("climate_analysis", {}),
             "recommendations": diagnostic_data.get("recommendations", {}),
         }
+        
+        # Traitement des données sanitaires si présentes
+        health_data = diagnostic_data.get("health_analysis", {})
+        if health_data:
+            # Formatage selon le type de rapport
+            if isinstance(self.formatters.get(ReportFormat.HTML), HTMLFormatter) or isinstance(self.formatters.get(ReportFormat.PDF), PDFFormatter):
+                context["health_section"] = self.health_formatter.format_health_section_html(health_data, health_detail_level)
+            else:
+                context["health_summary"] = self.health_formatter.get_health_summary_for_text(health_data)
+                
+            # Ajouter des points importants au résumé si nécessaire
+            if health_data.get("overall_health_score", 0) < 5 and "summary_highlights" in context:
+                context["summary_highlights"].append(f"État sanitaire préoccupant: {health_data.get('health_status', 'Problèmes sanitaires détectés')}")
+                
+            # Intégrer les recommandations sanitaires aux recommandations générales
+            if "recommendations" in health_data and "recommendations" in context:
+                health_recs = health_data["recommendations"]
+                if isinstance(health_recs, list) and "operations" in context["recommendations"]:
+                    for rec in health_recs:
+                        if isinstance(rec, dict) and "title" in rec:
+                            context["recommendations"]["operations"].append({
+                                "name": f"[Sanitaire] {rec.get('title', 'Action sanitaire')}",
+                                "priority": rec.get("priority", "Normale"),
+                                "timeframe": rec.get("timeframe", "Dès que possible"),
+                                "description": rec.get("description", "")
+                            })
         
         return context
     
