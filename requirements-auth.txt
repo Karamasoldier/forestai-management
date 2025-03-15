@@ -1,0 +1,7 @@
+# Dépendances pour l'authentification et la sécurité API
+python-jose[cryptography]>=3.3.0  # Pour gérer les jetons JWT
+passlib[bcrypt]>=1.7.4  # Pour le hachage de mots de passe
+python-multipart>=0.0.5  # Pour le parsing des formulaires multipart
+httpx>=0.23.0  # Client HTTP amélioré pour les tests
+itsdangerous>=2.1.2  # Outils de signature et gestion de sessions
+secure>=0.3.0  # Utilitaires de sécurité pour FastAPI
