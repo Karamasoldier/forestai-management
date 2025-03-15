@@ -64,10 +64,12 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 - ✅ Finalisation du DiagnosticAgent pour l'analyse des données terrain
 - ✅ Exposition du DiagnosticAgent et HealthAnalyzer via l'API REST
 - ✅ Tests unitaires et d'intégration pour l'API REST du DiagnosticAgent
+- ✅ Optimisation des performances de l'analyse sanitaire et des diagnostics
+- ✅ Parallélisation et traitement par lots pour les grands volumes de données sanitaires
 
 ### Objectifs en cours
 
-- 🔄 Optimisation des performances de l'analyse sanitaire et des diagnostics
+- 🔄 Mise en œuvre des exemples d'utilisation des fonctionnalités optimisées
 
 ### Objectifs planifiés
 
@@ -115,12 +117,14 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | DiagnosticAgent | 90% | Structure implémentée, intégration complète avec HealthAnalyzer et API REST |
 | ReportGenerator | 100% | Système de génération de rapports multiformat complet et modulaire |
 | HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
+| OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 75% | Tests unitaires étendus, tests d'intégration de base pour tous les agents |
 | Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
+| Optimisation | 80% | Parallélisation des analyses sanitaires implémentée, autres analyses en cours d'optimisation |
 
 ## Calendrier prévisionnel
 
@@ -149,7 +153,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
 1. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-2. **Optimisation de performance** - Parallélisation des analyses spatiales et sanitaires
+2. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
 3. **Documentation** - Amélioration des guides d'utilisation et exemples
 4. **Visualisation** - Amélioration de la génération de cartes et rapports
 5. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
