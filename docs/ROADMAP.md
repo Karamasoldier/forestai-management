@@ -38,6 +38,7 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - ✅ Système de détection automatique des zones prioritaires pour subventions
 - ✅ API REST pour l'accès externe aux fonctionnalités
 - ✅ Documentation de l'API avec OpenAPI
+- ✅ Finalisation du système de cache pour les données externes
 
 ### Objectifs en cours
 
@@ -48,7 +49,6 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 
 ### Objectifs planifiés
 
-- ⏳ Finalisation du système de cache pour les données externes
 - ⏳ Intégration des alertes et notifications
 - ⏳ Implémentation des tests de régression automatisés
 - ⏳ Authentification et sécurisation de l'API REST
@@ -105,6 +105,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
 | API REST | 90% | Endpoints principaux implémentés, documentation OpenAPI complète, tests unitaires en place |
+| Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 60% | Tests unitaires étendus, tests d'intégration en développement |
 | Documentation | 85% | Documentation utilisateur et développeur complétée, guides d'intégration et API documentée |
 
@@ -113,7 +114,6 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 - **Q2 2025**: Finalisation Phase 2
   - Tests d'intégration complets
   - Authentification et sécurisation de l'API REST
-  - Système de cache optimisé
   - Documentation inter-agents
 
 - **Q3 2025**: Début Phase 3
@@ -138,7 +138,7 @@ Les contributions au projet sont les bienvenues ! Voici les priorités actuelles
 
 1. **Tests d'intégration** - Développement de tests pour valider les intégrations entre agents
 2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-3. **Optimisation de performance** - Parallélisation des analyses spatiales et mise en cache intelligente
+3. **Optimisation de performance** - Parallélisation des analyses spatiales
 4. **Documentation** - Amélioration des guides d'utilisation et exemples
 5. **Visualisation** - Amélioration de la génération de cartes et rapports
 
