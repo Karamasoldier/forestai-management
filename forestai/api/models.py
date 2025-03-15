@@ -182,3 +182,134 @@ class ApplicationRequest(BaseModel):
                 "output_formats": ["pdf", "html"]
             }
         }
+
+# Modèles pour DiagnosticAgent
+class InventoryItem(BaseModel):
+    """Modèle pour un arbre dans l'inventaire forestier."""
+    species: str = Field(..., description="Espèce de l'arbre")
+    diameter: float = Field(..., description="Diamètre de l'arbre (en cm)")
+    height: float = Field(..., description="Hauteur de l'arbre (en m)")
+    age: Optional[int] = Field(None, description="Âge estimé de l'arbre (en années)")
+    health_status: Optional[str] = Field(None, description="État sanitaire (bon, moyen, mauvais)")
+    x: Optional[float] = Field(None, description="Coordonnée X (optionnelle)")
+    y: Optional[float] = Field(None, description="Coordonnée Y (optionnelle)")
+    notes: Optional[str] = Field(None, description="Notes supplémentaires")
+
+class InventoryData(BaseModel):
+    """Modèle pour les données d'inventaire forestier."""
+    items: List[InventoryItem] = Field(..., description="Liste des arbres inventoriés")
+    area: Optional[float] = Field(None, description="Surface inventoriée (ha)")
+    date: Optional[date] = Field(None, description="Date de l'inventaire")
+    method: Optional[str] = Field(None, description="Méthode d'inventaire")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "items": [
+                    {
+                        "species": "quercus_ilex",
+                        "diameter": 25.5,
+                        "height": 12.0,
+                        "health_status": "bon"
+                    },
+                    {
+                        "species": "pinus_pinea",
+                        "diameter": 35.0,
+                        "height": 18.5,
+                        "health_status": "moyen"
+                    }
+                ],
+                "area": 1.5,
+                "date": "2025-03-01",
+                "method": "placettes"
+            }
+        }
+
+class DiagnosticRequest(BaseModel):
+    """Modèle pour la demande de diagnostic forestier."""
+    parcel_id: str = Field(..., description="Identifiant de la parcelle")
+    inventory_data: Optional[InventoryData] = Field(None, description="Données d'inventaire forestier (optionnel)")
+    include_health_analysis: bool = Field(True, description="Inclure l'analyse sanitaire")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "parcel_id": "13097000B0012",
+                "inventory_data": {
+                    "items": [
+                        {
+                            "species": "quercus_ilex",
+                            "diameter": 25.5,
+                            "height": 12.0,
+                            "health_status": "bon"
+                        }
+                    ],
+                    "area": 1.5
+                },
+                "include_health_analysis": True
+            }
+        }
+
+class ManagementPlanRequest(BaseModel):
+    """Modèle pour la demande de plan de gestion."""
+    parcel_id: str = Field(..., description="Identifiant de la parcelle")
+    goals: List[str] = Field(..., description="Objectifs de gestion (production, biodiversité, resilience, etc.)")
+    horizon_years: int = Field(10, description="Horizon temporel du plan en années")
+    use_existing_diagnostic: bool = Field(False, description="Utiliser un diagnostic existant")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "parcel_id": "13097000B0012",
+                "goals": ["production", "resilience"],
+                "horizon_years": 15,
+                "use_existing_diagnostic": True
+            }
+        }
+
+class HealthAnalysisRequest(BaseModel):
+    """Modèle pour la demande d'analyse sanitaire forestière."""
+    inventory_data: InventoryData = Field(..., description="Données d'inventaire forestier")
+    additional_symptoms: Optional[Dict[str, Any]] = Field(None, description="Observations supplémentaires de symptômes")
+    climate_data: Optional[Dict[str, Any]] = Field(None, description="Données climatiques pour l'analyse de risques")
+    parcel_id: Optional[str] = Field(None, description="Identifiant de parcelle pour enrichissement des données")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "inventory_data": {
+                    "items": [
+                        {
+                            "species": "quercus_ilex",
+                            "diameter": 25.5,
+                            "height": 12.0,
+                            "health_status": "moyen"
+                        }
+                    ],
+                    "area": 1.5
+                },
+                "additional_symptoms": {
+                    "leaf_discoloration": 0.35,
+                    "observed_pests": ["bark_beetle"],
+                    "crown_thinning": 0.25
+                },
+                "parcel_id": "13097000B0012"
+            }
+        }
+
+class ReportRequest(BaseModel):
+    """Modèle pour la demande de génération de rapport."""
+    report_type: str = Field(..., description="Type de rapport (diagnostic, management_plan, health)")
+    data_id: str = Field(..., description="Identifiant des données (parcelle, diagnostic, etc.)")
+    format: str = Field("pdf", description="Format du rapport (pdf, html, txt)")
+    health_detail_level: Optional[str] = Field("standard", description="Niveau de détail sanitaire (minimal, standard, complete)")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "report_type": "diagnostic",
+                "data_id": "13097000B0012",
+                "format": "pdf",
+                "health_detail_level": "standard"
+            }
+        }
