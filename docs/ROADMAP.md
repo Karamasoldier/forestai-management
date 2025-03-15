@@ -36,19 +36,22 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - ✅ Génération automatique de documents (PDF, HTML, DOCX)
 - ✅ Intégration SubsidyAgent ↔ GeoAgent
 - ✅ Système de détection automatique des zones prioritaires pour subventions
+- ✅ API REST pour l'accès externe aux fonctionnalités
+- ✅ Documentation de l'API avec OpenAPI
 
 ### Objectifs en cours
 
 - 🔄 Tests d'intégration entre agents
 - 🔄 Documentation de l'utilisation combinée des agents
-- 🔄 API REST pour l'accès externe aux fonctionnalités
 - 🔄 Amélioration des métriques de potentiel forestier
+- 🔄 Tests unitaires et d'intégration pour l'API REST
 
 ### Objectifs planifiés
 
 - ⏳ Finalisation du système de cache pour les données externes
 - ⏳ Intégration des alertes et notifications
 - ⏳ Implémentation des tests de régression automatisés
+- ⏳ Authentification et sécurisation de l'API REST
 
 ## Phase 3: Agents avancés (🔜 Prochainement)
 
@@ -62,6 +65,7 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 - ⏳ Système avancé de recommandation d'espèces basé sur ML
 - ⏳ Intégration des données de télédétection (satellite, LIDAR)
 - ⏳ Prédiction de croissance forestière avec série temporelle
+- ⏳ Interface utilisateur web basique consommant l'API REST
 
 ## Phase 4: Intelligence collective et automatisation (🔮 Vision future)
 
@@ -92,7 +96,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## État d'avancement actuel
 
 | Module | Progression | Détails |
-|--------|-------------|---------
+|--------|-------------|---------|
 | GeoAgent | 95% | Fonctionnalités principales + détection automatique zones prioritaires complètes |
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
@@ -100,15 +104,15 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | DiagnosticAgent | 5% | Conception préliminaire, implémentation à venir |
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
-| API REST | 30% | Endpoints de base implémentés, documentation à compléter |
-| Tests | 45% | Tests unitaires en place, tests d'intégration en développement |
-| Documentation | 80% | Documentation utilisateur et développeur complétée, guides d'intégration ajoutés |
+| API REST | 90% | Endpoints principaux implémentés, documentation OpenAPI complète, tests unitaires en place |
+| Tests | 60% | Tests unitaires étendus, tests d'intégration en développement |
+| Documentation | 85% | Documentation utilisateur et développeur complétée, guides d'intégration et API documentée |
 
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 2
   - Tests d'intégration complets
-  - API REST complète avec documentation OpenAPI
+  - Authentification et sécurisation de l'API REST
   - Système de cache optimisé
   - Documentation inter-agents
 
@@ -116,6 +120,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
   - Implémentation du DiagnosticAgent V1
   - Intégration des données de télédétection
   - Premiers modules du DocumentAgent
+  - Interface utilisateur web basique
 
 - **Q4 2025**: Suite Phase 3
   - Implémentation de l'ExploitantAgent
@@ -131,8 +136,8 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **API REST** - Développement de l'API REST pour l'accès externe
-2. **Tests d'intégration** - Développement de tests pour valider les intégrations entre agents
+1. **Tests d'intégration** - Développement de tests pour valider les intégrations entre agents
+2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
 3. **Optimisation de performance** - Parallélisation des analyses spatiales et mise en cache intelligente
 4. **Documentation** - Amélioration des guides d'utilisation et exemples
 5. **Visualisation** - Amélioration de la génération de cartes et rapports
