@@ -5,14 +5,16 @@ Définit les routes et endpoints pour accéder aux fonctionnalités des agents F
 
 import logging
 import uvicorn
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, status, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response, FileResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from typing import Dict, Any, List, Optional
 import os
 import json
 from pathlib import Path
 from io import BytesIO
+from datetime import timedelta
 from pydantic import BaseModel, Field
 
 from forestai.core.utils.config import Config
@@ -30,6 +32,22 @@ from forestai.api.models import (
     SuccessResponse
 )
 from forestai.api.dependencies import get_geo_agent, get_subsidy_agent, get_diagnostic_agent
+from forestai.api.auth import (
+    authenticate_user, 
+    create_access_token, 
+    get_current_user, 
+    User,
+    TokenResponse,
+    JWT_EXPIRATION_MINUTES,
+    geo_read, 
+    geo_write,
+    subsidy_read,
+    subsidy_write,
+    diagnostic_read,
+    diagnostic_write,
+    regulation_read,
+    admin_only
+)
 from forestai.agents.geo_agent import GeoAgent
 from forestai.agents.subsidy_agent import SubsidyAgent
 from forestai.agents.diagnostic_agent import DiagnosticAgent
@@ -55,6 +73,63 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Routes d'authentification
+@app.post("/auth/token", response_model=TokenResponse, tags=["Authentication"])
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Obtenir un jeton d'accès pour l'API ForestAI.
+    
+    Utilise le flux OAuth2 standard avec vos identifiants.
+    """
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        logger.warning(f"Tentative d'authentification échouée pour {form_data.username}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Nom d'utilisateur ou mot de passe incorrect",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Créer les données de jeton
+    token_data = {
+        "sub": user.username,
+        "scope": user.scopes,
+        "name": user.full_name,
+        "admin": user.admin
+    }
+    
+    # Créer le jeton
+    access_token_expires = timedelta(minutes=JWT_EXPIRATION_MINUTES)
+    access_token = create_access_token(
+        data=token_data, expires_delta=access_token_expires
+    )
+    
+    logger.info(f"Jeton d'accès généré pour {user.username}")
+    
+    # Préparer les informations utilisateur
+    user_info = {
+        "username": user.username,
+        "scopes": user.scopes,
+        "full_name": user.full_name,
+        "is_admin": user.admin
+    }
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": JWT_EXPIRATION_MINUTES * 60,
+        "user_info": user_info
+    }
+
+@app.get("/auth/me", response_model=User, tags=["Authentication"])
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    """
+    Récupérer les informations sur l'utilisateur authentifié.
+    
+    Cet endpoint nécessite un jeton d'authentification valide.
+    """
+    return current_user
+
 # Route de base
 @app.get("/", tags=["General"])
 async def root():
@@ -78,7 +153,8 @@ async def status():
                 "diagnostic_agent": "available",
                 "reglementation_agent": "planned"
             },
-            "api_version": "0.1.0"
+            "api_version": "0.1.0",
+            "authentication": "enabled"
         }
     except Exception as e:
         logger.error(f"Error checking status: {str(e)}")
@@ -89,7 +165,11 @@ async def status():
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["GeoAgent"])
-async def search_parcels(request: ParcelSearchRequest, geo_agent: GeoAgent = Depends(get_geo_agent)):
+async def search_parcels(
+    request: ParcelSearchRequest, 
+    geo_agent: GeoAgent = Depends(get_geo_agent),
+    current_user: User = Depends(geo_read)
+):
     """
     Rechercher des parcelles cadastrales.
     
@@ -98,7 +178,7 @@ async def search_parcels(request: ParcelSearchRequest, geo_agent: GeoAgent = Dep
     - **numero**: Numéro de parcelle (optionnel)
     """
     try:
-        logger.info(f"Recherche de parcelles avec {request.dict()}")
+        logger.info(f"Recherche de parcelles avec {request.dict()} par {current_user.username}")
         result = geo_agent.execute_action(
             "search_parcels", 
             {key: value for key, value in request.dict().items() if value is not None}
@@ -112,7 +192,11 @@ async def search_parcels(request: ParcelSearchRequest, geo_agent: GeoAgent = Dep
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["GeoAgent"])
-async def analyze_parcel(request: ParcelAnalysisRequest, geo_agent: GeoAgent = Depends(get_geo_agent)):
+async def analyze_parcel(
+    request: ParcelAnalysisRequest, 
+    geo_agent: GeoAgent = Depends(get_geo_agent),
+    current_user: User = Depends(geo_read)
+):
     """
     Analyser une parcelle pour son potentiel forestier.
     
@@ -120,7 +204,7 @@ async def analyze_parcel(request: ParcelAnalysisRequest, geo_agent: GeoAgent = D
     - **analyses**: Liste des analyses à effectuer (optionnel)
     """
     try:
-        logger.info(f"Analyse de parcelle {request.parcel_id}")
+        logger.info(f"Analyse de parcelle {request.parcel_id} par {current_user.username}")
         result = geo_agent.execute_action(
             "analyze_parcel", 
             {key: value for key, value in request.dict().items() if value is not None}
@@ -135,7 +219,11 @@ async def analyze_parcel(request: ParcelAnalysisRequest, geo_agent: GeoAgent = D
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["SubsidyAgent"])
-async def search_subsidies(request: SubsidySearchRequest, subsidy_agent: SubsidyAgent = Depends(get_subsidy_agent)):
+async def search_subsidies(
+    request: SubsidySearchRequest, 
+    subsidy_agent: SubsidyAgent = Depends(get_subsidy_agent),
+    current_user: User = Depends(subsidy_read)
+):
     """
     Rechercher des subventions disponibles pour un projet forestier.
     
@@ -145,7 +233,7 @@ async def search_subsidies(request: SubsidySearchRequest, subsidy_agent: Subsidy
     - **parcel_id**: Identifiant de parcelle pour l'enrichissement des données (optionnel)
     """
     try:
-        logger.info(f"Recherche de subventions avec {request.dict()}")
+        logger.info(f"Recherche de subventions avec {request.dict()} par {current_user.username}")
         result = subsidy_agent.execute_action(
             "search_subsidies", 
             {key: value for key, value in request.dict().items() if value is not None}
@@ -159,7 +247,11 @@ async def search_subsidies(request: SubsidySearchRequest, subsidy_agent: Subsidy
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["SubsidyAgent"])
-async def analyze_eligibility(request: EligibilityRequest, subsidy_agent: SubsidyAgent = Depends(get_subsidy_agent)):
+async def analyze_eligibility(
+    request: EligibilityRequest, 
+    subsidy_agent: SubsidyAgent = Depends(get_subsidy_agent),
+    current_user: User = Depends(subsidy_read)
+):
     """
     Analyser l'éligibilité d'un projet à une subvention.
     
@@ -167,7 +259,7 @@ async def analyze_eligibility(request: EligibilityRequest, subsidy_agent: Subsid
     - **subsidy_id**: Identifiant de la subvention à analyser
     """
     try:
-        logger.info(f"Analyse d'éligibilité pour {request.subsidy_id}")
+        logger.info(f"Analyse d'éligibilité pour {request.subsidy_id} par {current_user.username}")
         result = subsidy_agent.execute_action(
             "analyze_eligibility", 
             {
@@ -184,7 +276,11 @@ async def analyze_eligibility(request: EligibilityRequest, subsidy_agent: Subsid
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["SubsidyAgent"])
-async def generate_application(request: ApplicationRequest, subsidy_agent: SubsidyAgent = Depends(get_subsidy_agent)):
+async def generate_application(
+    request: ApplicationRequest, 
+    subsidy_agent: SubsidyAgent = Depends(get_subsidy_agent),
+    current_user: User = Depends(subsidy_write)
+):
     """
     Générer des documents de demande de subvention.
     
@@ -194,7 +290,7 @@ async def generate_application(request: ApplicationRequest, subsidy_agent: Subsi
     - **output_formats**: Formats de sortie souhaités
     """
     try:
-        logger.info(f"Génération de demande pour {request.subsidy_id}")
+        logger.info(f"Génération de demande pour {request.subsidy_id} par {current_user.username}")
         result = subsidy_agent.execute_action(
             "generate_application", 
             {
@@ -214,7 +310,11 @@ async def generate_application(request: ApplicationRequest, subsidy_agent: Subsi
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["DiagnosticAgent"])
-async def generate_diagnostic(request: DiagnosticRequest, diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent)):
+async def generate_diagnostic(
+    request: DiagnosticRequest, 
+    diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent),
+    current_user: User = Depends(diagnostic_read)
+):
     """
     Générer un diagnostic forestier pour une parcelle.
     
@@ -223,7 +323,7 @@ async def generate_diagnostic(request: DiagnosticRequest, diagnostic_agent: Diag
     - **include_health_analysis**: Inclure l'analyse sanitaire
     """
     try:
-        logger.info(f"Génération d'un diagnostic pour la parcelle {request.parcel_id}")
+        logger.info(f"Génération d'un diagnostic pour la parcelle {request.parcel_id} par {current_user.username}")
         
         # Préparer les paramètres pour le diagnostic
         params = {
@@ -247,7 +347,11 @@ async def generate_diagnostic(request: DiagnosticRequest, diagnostic_agent: Diag
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["DiagnosticAgent"])
-async def generate_management_plan(request: ManagementPlanRequest, diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent)):
+async def generate_management_plan(
+    request: ManagementPlanRequest, 
+    diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent),
+    current_user: User = Depends(diagnostic_write)
+):
     """
     Générer un plan de gestion forestière.
     
@@ -257,7 +361,7 @@ async def generate_management_plan(request: ManagementPlanRequest, diagnostic_ag
     - **use_existing_diagnostic**: Utiliser un diagnostic existant
     """
     try:
-        logger.info(f"Génération d'un plan de gestion pour la parcelle {request.parcel_id}")
+        logger.info(f"Génération d'un plan de gestion pour la parcelle {request.parcel_id} par {current_user.username}")
         
         # Préparer les paramètres
         params = {
@@ -279,7 +383,11 @@ async def generate_management_plan(request: ManagementPlanRequest, diagnostic_ag
           response_model=SuccessResponse, 
           responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
           tags=["DiagnosticAgent"])
-async def analyze_health(request: HealthAnalysisRequest, diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent)):
+async def analyze_health(
+    request: HealthAnalysisRequest, 
+    diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent),
+    current_user: User = Depends(diagnostic_read)
+):
     """
     Effectuer une analyse sanitaire forestière.
     
@@ -289,7 +397,7 @@ async def analyze_health(request: HealthAnalysisRequest, diagnostic_agent: Diagn
     - **parcel_id**: Identifiant de parcelle pour enrichissement des données (optionnel)
     """
     try:
-        logger.info("Analyse sanitaire forestière")
+        logger.info(f"Analyse sanitaire forestière par {current_user.username}")
         
         # Instancier le HealthAnalyzer
         health_analyzer = HealthAnalyzer()
@@ -327,7 +435,11 @@ async def analyze_health(request: HealthAnalysisRequest, diagnostic_agent: Diagn
               500: {"model": ErrorResponse}
           },
           tags=["DiagnosticAgent"])
-async def generate_report(request: ReportRequest, diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent)):
+async def generate_report(
+    request: ReportRequest, 
+    diagnostic_agent: DiagnosticAgent = Depends(get_diagnostic_agent),
+    current_user: User = Depends(diagnostic_read)
+):
     """
     Générer un rapport forestier au format demandé.
     
@@ -337,7 +449,7 @@ async def generate_report(request: ReportRequest, diagnostic_agent: DiagnosticAg
     - **health_detail_level**: Niveau de détail sanitaire (minimal, standard, complete)
     """
     try:
-        logger.info(f"Génération d'un rapport {request.report_type} pour {request.data_id}")
+        logger.info(f"Génération d'un rapport {request.report_type} pour {request.data_id} par {current_user.username}")
         
         # Initialiser le générateur de rapports
         report_generator = ReportGenerator()
@@ -434,6 +546,36 @@ async def generate_report(request: ReportRequest, diagnostic_agent: DiagnosticAg
             
     except Exception as e:
         logger.error(f"Error generating report: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route d'administration (accessible uniquement aux administrateurs)
+@app.get("/admin/stats", tags=["Admin"])
+async def get_system_stats(current_user: User = Depends(admin_only)):
+    """
+    Obtenir des statistiques sur l'utilisation du système.
+    
+    Cet endpoint est réservé aux administrateurs.
+    """
+    try:
+        logger.info(f"Récupération des statistiques du système par l'administrateur {current_user.username}")
+        # Ici, on pourrait récupérer des statistiques sur l'utilisation de l'API, les requêtes, etc.
+        stats = {
+            "api_requests_total": 12345,
+            "api_requests_today": 123,
+            "users_active": 5,
+            "average_response_time_ms": 450,
+            "agents_usage": {
+                "geo_agent": 4500,
+                "subsidy_agent": 3200,
+                "diagnostic_agent": 4100,
+                "health_analyzer": 2800
+            },
+            "last_updated": "2025-03-15T17:00:00Z"
+        }
+        
+        return stats
+    except Exception as e:
+        logger.error(f"Error getting system stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 # Fonction pour démarrer le serveur directement
