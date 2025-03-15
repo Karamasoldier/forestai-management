@@ -45,7 +45,6 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - 🔄 Tests d'intégration entre agents
 - 🔄 Documentation de l'utilisation combinée des agents
 - 🔄 Amélioration des métriques de potentiel forestier
-- 🔄 Tests unitaires et d'intégration pour l'API REST
 
 ### Objectifs planifiés
 
@@ -62,10 +61,13 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 - ✅ Implémentation du générateur de rapports forestiers (multi-formats: PDF, HTML, DOCX, TXT, JSON)
 - ✅ Développement du module d'analyse sanitaire forestière (HealthAnalyzer)
 - ✅ Intégration des analyses sanitaires dans les rapports de diagnostic
+- ✅ Finalisation du DiagnosticAgent pour l'analyse des données terrain
+- ✅ Exposition du DiagnosticAgent et HealthAnalyzer via l'API REST
+- ✅ Tests unitaires et d'intégration pour l'API REST du DiagnosticAgent
 
 ### Objectifs en cours
 
-- 🔄 Finalisation du DiagnosticAgent pour l'analyse des données terrain
+- 🔄 Optimisation des performances de l'analyse sanitaire et des diagnostics
 
 ### Objectifs planifiés
 
@@ -110,15 +112,15 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
 | SubsidyAgent | 80% | Structure principale et génération de documents complètes, intégration avancée réalisée |
-| DiagnosticAgent | 75% | Structure de base implémentée, générateur de rapports et analyseur sanitaire forestier intégrés |
+| DiagnosticAgent | 90% | Structure implémentée, intégration complète avec HealthAnalyzer et API REST |
 | ReportGenerator | 100% | Système de génération de rapports multiformat complet et modulaire |
 | HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
-| API REST | 90% | Endpoints principaux implémentés, documentation OpenAPI complète, tests unitaires en place |
+| API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
-| Tests | 60% | Tests unitaires étendus, tests d'intégration en développement |
-| Documentation | 85% | Documentation utilisateur et développeur complétée, guides d'intégration et API documentée |
+| Tests | 75% | Tests unitaires étendus, tests d'intégration de base pour tous les agents |
+| Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
 
 ## Calendrier prévisionnel
 
@@ -128,9 +130,8 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
   - Documentation inter-agents
 
 - **Q3 2025**: Suite Phase 3
-  - Finalisation du DiagnosticAgent V1
-  - Intégration des données de télédétection
   - Premiers modules du DocumentAgent
+  - Intégration des données de télédétection
   - Interface utilisateur web basique
 
 - **Q4 2025**: Suite Phase 3
@@ -147,11 +148,11 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Tests d'intégration** - Développement de tests pour valider les intégrations entre agents
-2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-3. **Optimisation de performance** - Parallélisation des analyses spatiales
-4. **Documentation** - Amélioration des guides d'utilisation et exemples
-5. **Visualisation** - Amélioration de la génération de cartes et rapports
+1. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
+2. **Optimisation de performance** - Parallélisation des analyses spatiales et sanitaires
+3. **Documentation** - Amélioration des guides d'utilisation et exemples
+4. **Visualisation** - Amélioration de la génération de cartes et rapports
+5. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
 
 Pour contribuer, consultez le fichier [CONTRIBUTING.md](../CONTRIBUTING.md) pour les instructions et les bonnes pratiques.
 
