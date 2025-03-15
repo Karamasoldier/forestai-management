@@ -61,11 +61,11 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 
 - ✅ Implémentation du générateur de rapports forestiers (multi-formats: PDF, HTML, DOCX, TXT, JSON)
 - ✅ Développement du module d'analyse sanitaire forestière (HealthAnalyzer)
+- ✅ Intégration des analyses sanitaires dans les rapports de diagnostic
 
 ### Objectifs en cours
 
 - 🔄 Finalisation du DiagnosticAgent pour l'analyse des données terrain
-- 🔄 Intégration des analyses sanitaires dans les rapports de diagnostic
 
 ### Objectifs planifiés
 
@@ -110,9 +110,9 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
 | SubsidyAgent | 80% | Structure principale et génération de documents complètes, intégration avancée réalisée |
-| DiagnosticAgent | 60% | Structure de base implémentée, générateur de rapports et analyseur sanitaire forestier développés |
+| DiagnosticAgent | 75% | Structure de base implémentée, générateur de rapports et analyseur sanitaire forestier intégrés |
 | ReportGenerator | 100% | Système de génération de rapports multiformat complet et modulaire |
-| HealthAnalyzer | 95% | Module d'analyse sanitaire forestière avec détection de problèmes et recommandations |
+| HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
 | DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
 | API REST | 90% | Endpoints principaux implémentés, documentation OpenAPI complète, tests unitaires en place |
