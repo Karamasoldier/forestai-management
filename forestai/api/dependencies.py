@@ -10,6 +10,7 @@ from functools import lru_cache
 from forestai.core.utils.config import Config
 from forestai.agents.geo_agent import GeoAgent
 from forestai.agents.subsidy_agent import SubsidyAgent
+from forestai.agents.diagnostic_agent import DiagnosticAgent
 
 # Configuration du logger
 logger = logging.getLogger("forestai.api.dependencies")
@@ -17,6 +18,7 @@ logger = logging.getLogger("forestai.api.dependencies")
 # Singleton pour les agents partagés
 _geo_agent_instance = None
 _subsidy_agent_instance = None
+_diagnostic_agent_instance = None
 
 @lru_cache(maxsize=1)
 def get_config() -> Dict[str, Any]:
@@ -62,11 +64,27 @@ def get_subsidy_agent() -> SubsidyAgent:
     
     return _subsidy_agent_instance
 
+def get_diagnostic_agent() -> DiagnosticAgent:
+    """
+    Récupérer l'instance de DiagnosticAgent.
+    
+    Returns:
+        Instance de DiagnosticAgent
+    """
+    global _diagnostic_agent_instance
+    
+    if _diagnostic_agent_instance is None:
+        logger.info("Initialisation du DiagnosticAgent")
+        config = get_config()
+        _diagnostic_agent_instance = DiagnosticAgent(config)
+    
+    return _diagnostic_agent_instance
+
 def shutdown_agents():
     """
     Arrêter proprement les agents lors de l'arrêt de l'application.
     """
-    global _geo_agent_instance, _subsidy_agent_instance
+    global _geo_agent_instance, _subsidy_agent_instance, _diagnostic_agent_instance
     
     if _geo_agent_instance:
         logger.info("Arrêt du GeoAgent")
@@ -77,3 +95,8 @@ def shutdown_agents():
         logger.info("Arrêt du SubsidyAgent")
         _subsidy_agent_instance.unsubscribe_all()
         _subsidy_agent_instance = None
+    
+    if _diagnostic_agent_instance:
+        logger.info("Arrêt du DiagnosticAgent")
+        _diagnostic_agent_instance.unsubscribe_all()
+        _diagnostic_agent_instance = None
