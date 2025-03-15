@@ -3,5 +3,13 @@ from forestai.agents.diagnostic_agent.report_generator.formatters.pdf_formatter 
 from forestai.agents.diagnostic_agent.report_generator.formatters.docx_formatter import DOCXFormatter
 from forestai.agents.diagnostic_agent.report_generator.formatters.txt_formatter import TXTFormatter
 from forestai.agents.diagnostic_agent.report_generator.formatters.json_formatter import JSONFormatter
+from forestai.agents.diagnostic_agent.report_generator.formatters.health_section_formatter import HealthSectionFormatter
 
-__all__ = ['HTMLFormatter', 'PDFFormatter', 'DOCXFormatter', 'TXTFormatter', 'JSONFormatter']
+__all__ = [
+    'HTMLFormatter', 
+    'PDFFormatter', 
+    'DOCXFormatter', 
+    'TXTFormatter', 
+    'JSONFormatter',
+    'HealthSectionFormatter'
+]
