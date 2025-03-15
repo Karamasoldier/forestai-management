@@ -31,6 +31,7 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 - [Exemples d'utilisation](docs/EXAMPLES.md) - Guide pratique avec exemples de code
 - [Plan d'exécution](docs/ROADMAP.md) - Roadmap, phases de développement et état d'avancement
 - [API REST](docs/API.md) - Documentation de l'API REST
+- [Système de cache](docs/CACHE.md) - Documentation du système de cache pour l'optimisation des performances
 
 ## Guide rapide d'installation
 
@@ -88,6 +89,23 @@ python examples/api_usage_example.py
 - [Agent de réglementation forestière (ReglementationAgent)](docs/ReglementationAgent.md)
 - [Module d'analyse climatique (ClimateAnalyzer)](docs/ClimateAnalyzer.md)
 - [Agent de subventions (SubsidyAgent)](docs/SubsidyAgent.md)
+
+## Optimisation des performances
+
+Le projet intègre un système de cache multiniveau pour optimiser les performances :
+
+```python
+# Exemple d'utilisation du cache avec les agents
+from forestai.core.infrastructure.cache.base import CacheType, CachePolicy
+from forestai.core.infrastructure.cache.cache_utils import cached
+
+@cached(data_type=CacheType.GEODATA, policy=CachePolicy.WEEKLY)
+def expensive_function(param):
+    # Opération coûteuse...
+    return result
+```
+
+Pour une démonstration complète, voir [l'exemple d'utilisation du cache](examples/cache_usage_example.py).
 
 ## Licence
 
