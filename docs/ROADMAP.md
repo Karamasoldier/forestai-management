@@ -20,7 +20,7 @@ Cette phase a établi les bases de l'architecture et les fonctionnalités essent
 - ✅ Système de logging et gestion des erreurs
 - ✅ Documentation de base du système
 
-## Phase 2: Expansion des capacités (🔄 En cours)
+## Phase 2: Expansion des capacités (✅ Complété)
 
 Cette phase enrichit le système avec des agents supplémentaires et améliore l'intégration entre composants.
 
@@ -39,18 +39,11 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - ✅ API REST pour l'accès externe aux fonctionnalités
 - ✅ Documentation de l'API avec OpenAPI
 - ✅ Finalisation du système de cache pour les données externes
-
-### Objectifs en cours
-
-- 🔄 Tests d'intégration entre agents
-- 🔄 Documentation de l'utilisation combinée des agents
-- 🔄 Amélioration des métriques de potentiel forestier
-
-### Objectifs planifiés
-
-- ⏳ Intégration des alertes et notifications
-- ⏳ Implémentation des tests de régression automatisés
-- ⏳ Authentification et sécurisation de l'API REST
+- ✅ Intégration des alertes et notifications
+- ✅ Authentification et sécurisation de l'API REST
+- ✅ Tests d'intégration entre agents
+- ✅ Documentation de l'utilisation combinée des agents
+- ✅ Amélioration des métriques de potentiel forestier
 
 ## Phase 3: Agents avancés (🔄 En cours)
 
@@ -66,14 +59,15 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 - ✅ Tests unitaires et d'intégration pour l'API REST du DiagnosticAgent
 - ✅ Optimisation des performances de l'analyse sanitaire et des diagnostics
 - ✅ Parallélisation et traitement par lots pour les grands volumes de données sanitaires
+- ✅ Mise en œuvre des exemples d'utilisation des fonctionnalités optimisées
+- ✅ Développement du DocumentAgent pour la génération de documents administratifs
 
 ### Objectifs en cours
 
-- 🔄 Mise en œuvre des exemples d'utilisation des fonctionnalités optimisées
+- 🔄 Implémentation des tests de régression automatisés
 
 ### Objectifs planifiés
 
-- ⏳ Développement du DocumentAgent pour la génération de documents administratifs
 - ⏳ Création de l'ExploitantAgent pour la gestion des opérateurs forestiers
 - ⏳ Système avancé de recommandation d'espèces basé sur ML
 - ⏳ Intégration des données de télédétection (satellite, LIDAR)
@@ -118,7 +112,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ReportGenerator | 100% | Système de génération de rapports multiformat complet et modulaire |
 | HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
 | OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
-| DocumentAgent | 5% | Conception préliminaire, implémentation à venir |
+| DocumentAgent | 85% | Module de génération de documents administratifs implémenté : contrats, cahiers des charges |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
@@ -128,23 +122,22 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 ## Calendrier prévisionnel
 
-- **Q2 2025**: Finalisation Phase 2
-  - Tests d'intégration complets
-  - Authentification et sécurisation de l'API REST
-  - Documentation inter-agents
+- **Q2 2025**: Finalisation Phase 3
+  - Tests de régression automatisés
+  - Finalisation du DocumentAgent
+  - Premières fonctionnalités de l'ExploitantAgent
 
 - **Q3 2025**: Suite Phase 3
-  - Premiers modules du DocumentAgent
   - Intégration des données de télédétection
   - Interface utilisateur web basique
+  - Système de recommandation d'espèces
 
 - **Q4 2025**: Suite Phase 3
-  - Implémentation de l'ExploitantAgent
-  - Système avancé de recommandation d'espèces
+  - Implémentation complète de l'ExploitantAgent
   - Tableau de bord de suivi forestier
+  - Prédiction de croissance forestière
 
 - **Q1 2026**: Début Phase 4
-  - Prédiction de croissance forestière
   - Orchestration autonome des agents V1
   - Intégration IoT préliminaire
 
