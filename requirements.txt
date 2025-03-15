@@ -8,6 +8,9 @@ pydantic>=2.3.0
 requests>=2.31.0
 beautifulsoup4>=4.12.2
 python-dotenv>=1.0.0
+python-multipart>=0.0.6    # Pour le support des formulaires multipart
+starlette>=0.27.0         # Middleware pour FastAPI
+email-validator>=2.0.0    # Validation des emails
 
 # Géospatial
 geopandas>=0.13.2
@@ -45,3 +48,7 @@ weasyprint>=52.5     # Alternative à pdfkit
 tqdm>=4.66.1
 pytz>=2023.3
 apscheduler>=3.10.4
+
+# Testing
+pytest>=7.3.1
+httpx>=0.24.0       # Client HTTP pour tester FastAPI
