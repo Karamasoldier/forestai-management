@@ -29,6 +29,7 @@ class ReportType(Enum):
     INVENTORY = "inventory"
     CLIMATE = "climate"
     SUBSIDY = "subsidy"
+    HEALTH = "health"  # Nouveau type pour les rapports sanitaires spécifiques
 
 class ReportManager:
     """
@@ -75,7 +76,8 @@ class ReportManager:
         formats: List[Union[ReportFormat, str]] = None,
         additional_data: Dict[str, Any] = None,
         output_dir: Optional[Path] = None,
-        filename_prefix: Optional[str] = None
+        filename_prefix: Optional[str] = None,
+        health_detail_level: str = "standard"  # Nouveau paramètre pour le niveau de détail sanitaire
     ) -> Dict[ReportFormat, Path]:
         """
         Génère des rapports dans les formats spécifiés.
@@ -87,6 +89,7 @@ class ReportManager:
             additional_data: Données additionnelles pour le rapport
             output_dir: Répertoire de sortie personnalisé
             filename_prefix: Préfixe personnalisé pour les noms de fichiers
+            health_detail_level: Niveau de détail pour les sections sanitaires ('minimal', 'standard', 'complet')
             
         Returns:
             Dictionnaire des chemins de fichiers générés par format
@@ -140,7 +143,8 @@ class ReportManager:
                     enriched_data,
                     report_format,
                     None,  # Utiliser le template par défaut pour le format
-                    output_path
+                    output_path,
+                    health_detail_level  # Transmettre le niveau de détail sanitaire
                 )
                 
                 generated_files[report_format] = report_path
@@ -157,7 +161,8 @@ class ReportManager:
         formats: List[Union[ReportFormat, str]] = None,
         parcel_data: Optional[Dict[str, Any]] = None,
         output_dir: Optional[Path] = None,
-        filename_prefix: Optional[str] = None
+        filename_prefix: Optional[str] = None,
+        health_detail_level: str = "standard"
     ) -> Dict[ReportFormat, Path]:
         """
         Génère un rapport de diagnostic forestier.
@@ -168,6 +173,7 @@ class ReportManager:
             parcel_data: Données supplémentaires sur la parcelle
             output_dir: Répertoire de sortie personnalisé
             filename_prefix: Préfixe personnalisé pour les noms de fichiers
+            health_detail_level: Niveau de détail pour les sections sanitaires
             
         Returns:
             Dictionnaire des chemins de fichiers générés par format
@@ -178,7 +184,8 @@ class ReportManager:
             formats,
             parcel_data,
             output_dir,
-            filename_prefix
+            filename_prefix,
+            health_detail_level
         )
     
     def generate_management_plan_report(
@@ -187,7 +194,8 @@ class ReportManager:
         formats: List[Union[ReportFormat, str]] = None,
         diagnostic_data: Optional[Dict[str, Any]] = None,
         output_dir: Optional[Path] = None,
-        filename_prefix: Optional[str] = None
+        filename_prefix: Optional[str] = None,
+        health_detail_level: str = "standard"
     ) -> Dict[ReportFormat, Path]:
         """
         Génère un rapport de plan de gestion forestière.
@@ -198,6 +206,7 @@ class ReportManager:
             diagnostic_data: Données du diagnostic associé
             output_dir: Répertoire de sortie personnalisé
             filename_prefix: Préfixe personnalisé pour les noms de fichiers
+            health_detail_level: Niveau de détail pour les sections sanitaires
             
         Returns:
             Dictionnaire des chemins de fichiers générés par format
@@ -208,7 +217,8 @@ class ReportManager:
             formats,
             diagnostic_data,
             output_dir,
-            filename_prefix
+            filename_prefix,
+            health_detail_level
         )
     
     def generate_inventory_report(
@@ -217,7 +227,8 @@ class ReportManager:
         formats: List[Union[ReportFormat, str]] = None,
         parcel_data: Optional[Dict[str, Any]] = None,
         output_dir: Optional[Path] = None,
-        filename_prefix: Optional[str] = None
+        filename_prefix: Optional[str] = None,
+        health_detail_level: str = "minimal"  # Par défaut minimal pour les rapports d'inventaire
     ) -> Dict[ReportFormat, Path]:
         """
         Génère un rapport d'inventaire forestier.
@@ -228,6 +239,7 @@ class ReportManager:
             parcel_data: Données sur la parcelle
             output_dir: Répertoire de sortie personnalisé
             filename_prefix: Préfixe personnalisé pour les noms de fichiers
+            health_detail_level: Niveau de détail pour les sections sanitaires
             
         Returns:
             Dictionnaire des chemins de fichiers générés par format
@@ -238,7 +250,39 @@ class ReportManager:
             formats,
             parcel_data,
             output_dir,
-            filename_prefix
+            filename_prefix,
+            health_detail_level
+        )
+    
+    def generate_health_report(
+        self,
+        health_data: Dict[str, Any],
+        formats: List[Union[ReportFormat, str]] = None,
+        parcel_data: Optional[Dict[str, Any]] = None,
+        output_dir: Optional[Path] = None,
+        filename_prefix: Optional[str] = None
+    ) -> Dict[ReportFormat, Path]:
+        """
+        Génère un rapport sanitaire spécifique.
+        
+        Args:
+            health_data: Données sanitaires
+            formats: Formats de sortie désirés
+            parcel_data: Données sur la parcelle
+            output_dir: Répertoire de sortie personnalisé
+            filename_prefix: Préfixe personnalisé pour les noms de fichiers
+            
+        Returns:
+            Dictionnaire des chemins de fichiers générés par format
+        """
+        return self.generate_report(
+            ReportType.HEALTH,
+            health_data,
+            formats,
+            parcel_data,
+            output_dir,
+            filename_prefix,
+            "complet"  # Toujours utiliser le niveau complet pour les rapports sanitaires spécifiques
         )
     
     def _generate_report_id(self, report_type: ReportType, data: Dict[str, Any]) -> str:
@@ -285,6 +329,11 @@ class ReportManager:
                 enriched_data["parcel_data"] = additional_data
             elif report_type == ReportType.MANAGEMENT_PLAN:
                 enriched_data["diagnostic_data"] = additional_data
+            elif report_type == ReportType.HEALTH:
+                # Pour les rapports sanitaires, intégrer les données de parcelle
+                for key, value in additional_data.items():
+                    if key not in enriched_data:
+                        enriched_data[key] = value
             else:
                 # Pour les autres types, simplement fusionner les données
                 for key, value in additional_data.items():
@@ -309,6 +358,23 @@ class ReportManager:
             elif report_type == ReportType.CLIMATE:
                 enriched_data["title"] = "Analyse climatique"
                 enriched_data["subtitle"] = "Impact sur la gestion forestière"
+            elif report_type == ReportType.HEALTH:
+                enriched_data["title"] = "Rapport sanitaire forestier"
+                enriched_data["subtitle"] = "Analyse des risques et recommandations"
+                
+                # Pour les rapports sanitaires spécifiques, ajouter une introduction
+                if "summary" not in enriched_data and "summary" in data:
+                    enriched_data["summary"] = f"Ce rapport présente une analyse détaillée de l'état sanitaire du peuplement forestier. {data.get('summary', '')}"
+                
+                # Ajouter la date d'analyse si disponible
+                if "metadata" in data and "analysis_date" in data["metadata"]:
+                    try:
+                        date = datetime.datetime.fromisoformat(data["metadata"]["analysis_date"])
+                        enriched_data["date"] = date.strftime("%d/%m/%Y %H:%M")
+                    except (ValueError, TypeError):
+                        enriched_data["date"] = data["metadata"]["analysis_date"]
+                else:
+                    enriched_data["date"] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
         
         # Générer des visualisations si nécessaire et si le module est disponible
         try:
