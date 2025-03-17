@@ -78,6 +78,8 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Intégration des modèles d'apprentissage automatique
     - ✅ Analyse comparative des scénarios de changement climatique
     - ✅ Exemples d'utilisation
+    - ✅ Modularisation et optimisation du code
+    - ✅ Génération de rapports d'adaptation climatique
 
 ### Objectifs en cours
 
@@ -128,12 +130,12 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
 | DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
-| SpeciesRecommender | 90% | Système complet avec base algorithmique et extension ML, analyse des scénarios climatiques, modularisation avancée |
+| SpeciesRecommender | 100% | Système complet avec base algorithmique, extension ML et analyse climatique ; modularisation et optimisation réalisées |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
 | Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
-| Optimisation | 80% | Parallélisation des analyses sanitaires implémentée, autres analyses en cours d'optimisation |
+| Optimisation | 85% | Parallélisation des analyses sanitaires implémentée, optimisation du système de recommandation d'espèces réalisée |
 
 ## Calendrier prévisionnel
 
