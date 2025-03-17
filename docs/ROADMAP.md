@@ -70,16 +70,17 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Gestionnaire des performances (PerformanceManager)
     - ✅ Intégration des modèles de données
     - ✅ Exemples d'utilisation
-- ✅ Système de recommandation d'espèces forestières (base)
+- ✅ Système de recommandation d'espèces forestières extensible
     - ✅ Modèles de données pour les espèces forestières
     - ✅ Système de scoring et de recommandation
     - ✅ Calcul de compatibilité climatique et pédologique
     - ✅ Évaluation des risques et du potentiel économique/écologique
+    - ✅ Intégration des modèles d'apprentissage automatique
+    - ✅ Analyse comparative des scénarios de changement climatique
     - ✅ Exemples d'utilisation
 
 ### Objectifs en cours
 
-- 🔄 Extension du système de recommandation d'espèces avec ML
 - 🔄 Intégration des données de télédétection (satellite, LIDAR)
 
 ### Objectifs planifiés
@@ -127,7 +128,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
 | DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
-| SpeciesRecommender | 65% | Base du système de recommandation implémentée, intégration ML en cours |
+| SpeciesRecommender | 90% | Système complet avec base algorithmique et extension ML, analyse des scénarios climatiques, modularisation avancée |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
@@ -137,16 +138,16 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 3
-  - Système de recommandation d'espèces avec ML
   - Intégration des données de télédétection
+  - Interface utilisateur web basique
 
 - **Q3 2025**: Suite Phase 3
-  - Interface utilisateur web basique
-  - Système complet de recommandation d'espèces
-
-- **Q4 2025**: Suite Phase 3
+  - Système de prédiction de croissance forestière
   - Tableau de bord de suivi forestier
-  - Prédiction de croissance forestière
+
+- **Q4 2025**: Transition vers Phase 4
+  - Premiers modules d'orchestration autonome
+  - Visualisation avancée et analyses prédictives
 
 - **Q1 2026**: Début Phase 4
   - Orchestration autonome des agents V1
@@ -156,9 +157,9 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Extension du système de recommandation d'espèces** - Intégration de modèles de ML pour améliorer les recommandations
+1. **Intégration données de télédétection** - Support pour les données satellite et LIDAR
 2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-3. **Intégration données de télédétection** - Support pour les données satellite et LIDAR
+3. **Prédiction de croissance forestière** - Implémentation de modèles prédictifs temporels
 4. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
 5. **Documentation** - Amélioration des guides d'utilisation et exemples
 6. **Visualisation** - Amélioration de la génération de cartes et rapports
