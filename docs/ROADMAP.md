@@ -1,3 +1,4 @@
+
 # Feuille de route ForestAI
 
 Ce document présente la feuille de route du projet ForestAI, détaillant les phases de développement planifiées et l'état d'avancement actuel.
@@ -80,14 +81,19 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Exemples d'utilisation
     - ✅ Modularisation et optimisation du code
     - ✅ Génération de rapports d'adaptation climatique
+- ✅ Intégration des données de télédétection (satellite, LIDAR)
+    - ✅ Connecteurs d'API pour l'acquisition des données
+    - ✅ Processeurs pour le traitement des images satellite et nuages de points LIDAR
+    - ✅ Extraction de métriques forestières à partir des données de télédétection
+    - ✅ Analyse temporelle de la croissance forestière
+    - ✅ Intégration avec le système de recommandation d'espèces
 
 ### Objectifs en cours
 
-- 🔄 Intégration des données de télédétection (satellite, LIDAR)
+- 🔄 Prédiction de croissance forestière avec série temporelle
 
 ### Objectifs planifiés
 
-- ⏳ Prédiction de croissance forestière avec série temporelle
 - ⏳ Interface utilisateur web basique consommant l'API REST
 
 ## Phase 4: Intelligence collective et automatisation (🔮 Vision future)
@@ -119,7 +125,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## État d'avancement actuel
 
 | Module | Progression | Détails |
-|--------|-------------|---------|
+|--------|-------------|---------| 
 | GeoAgent | 95% | Fonctionnalités principales + détection automatique zones prioritaires complètes |
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
@@ -131,6 +137,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
 | SpeciesRecommender | 100% | Système complet avec base algorithmique, extension ML et analyse climatique ; modularisation et optimisation réalisées |
+| RemoteSensingModule | 100% | Module d'intégration des données de télédétection satellite et LIDAR complet avec extraction de métriques forestières |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
@@ -140,7 +147,6 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 3
-  - Intégration des données de télédétection
   - Interface utilisateur web basique
 
 - **Q3 2025**: Suite Phase 3
@@ -159,13 +165,12 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Intégration données de télédétection** - Support pour les données satellite et LIDAR
+1. **Prédiction de croissance forestière** - Implémentation de modèles prédictifs temporels
 2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-3. **Prédiction de croissance forestière** - Implémentation de modèles prédictifs temporels
-4. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
-5. **Documentation** - Amélioration des guides d'utilisation et exemples
-6. **Visualisation** - Amélioration de la génération de cartes et rapports
-7. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
+3. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
+4. **Documentation** - Amélioration des guides d'utilisation et exemples
+5. **Visualisation** - Amélioration de la génération de cartes et rapports
+6. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
 
 Pour contribuer, consultez le fichier [CONTRIBUTING.md](../CONTRIBUTING.md) pour les instructions et les bonnes pratiques.
 
