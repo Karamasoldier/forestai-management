@@ -2,162 +2,263 @@
 # -*- coding: utf-8 -*-
 
 """
-Module de gestion des modèles pour la prédiction de croissance forestière.
+Module de gestion des modèles de prédiction pour l'analyse de croissance forestière.
 
-Ce module contient la classe ModelManagementService qui s'occupe de la
-sélection, persistance et évaluation des modèles de prédiction.
+Ce module fournit des services pour la gestion des modèles SARIMA et autres modèles
+de séries temporelles utilisés dans la prédiction de croissance forestière.
 """
 
 import os
 import logging
+import pickle
+import json
+import hashlib
+from typing import Dict, List, Tuple, Any, Optional, Union
 import pandas as pd
-import joblib
-from typing import Dict, List, Optional, Tuple
-from pathlib import Path
+import numpy as np
+from datetime import datetime
 
-from forestai.domain.services.remote_sensing.growth_prediction.models_base import GrowthPredictionModel
-from forestai.domain.services.remote_sensing.growth_prediction.model_sarima import SarimaGrowthModel
+from forestai.core.infrastructure.cache.base import CacheType, CachePolicy
+from forestai.core.infrastructure.cache.cache_utils import cached
 
+# Configuration du logger
 logger = logging.getLogger(__name__)
 
-class ModelManagementService:
-    """
-    Service de gestion des modèles pour la prédiction de croissance forestière.
-    """
+class ModelManager:
+    """Gestionnaire des modèles de prédiction pour l'analyse de croissance forestière."""
     
     def __init__(self, models_dir: Optional[str] = None):
         """
-        Initialise le service de gestion des modèles.
+        Initialise le gestionnaire de modèles.
         
         Args:
-            models_dir: Répertoire pour sauvegarder/charger les modèles entraînés
+            models_dir: Répertoire pour stocker les modèles persistants
+                        (si None, utilise le répertoire par défaut)
         """
-        self.models_dir = models_dir or os.path.join(os.path.dirname(__file__), 'saved_models')
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         
-        # Création du répertoire si nécessaire
-        Path(self.models_dir).mkdir(parents=True, exist_ok=True)
+        if models_dir is None:
+            # Utiliser un répertoire par défaut
+            base_dir = os.environ.get('FORESTAI_DATA_DIR', os.path.expanduser('~/.forestai'))
+            self.models_dir = os.path.join(base_dir, 'models', 'growth_prediction')
+        else:
+            self.models_dir = models_dir
         
-        # Dictionnaire des modèles disponibles
-        self._available_models = {
-            'sarima': SarimaGrowthModel
-            # D'autres modèles pourront être ajoutés ici (exp_smoothing, random_forest, etc.)
-        }
+        # Créer le répertoire s'il n'existe pas
+        os.makedirs(self.models_dir, exist_ok=True)
         
-        logger.info(f"ModelManagementService initialisé avec {len(self._available_models)} modèles disponibles")
+        self._logger.debug(f"Utilisation du répertoire de modèles: {self.models_dir}")
     
-    def get_available_models(self) -> Dict[str, type]:
+    def generate_model_id(self, parcel_id: str, target_metric: str, params: Dict[str, Any]) -> str:
         """
-        Récupère le dictionnaire des modèles disponibles.
-        
-        Returns:
-            Dictionnaire des modèles disponibles
-        """
-        return self._available_models
-    
-    def get_model_path(self, parcel_id: str, model_type: str, target_metric: str) -> str:
-        """
-        Génère le chemin pour sauvegarder/charger un modèle.
+        Génère un identifiant unique pour un modèle basé sur ses paramètres.
         
         Args:
             parcel_id: Identifiant de la parcelle
-            model_type: Type de modèle (ex: 'sarima')
-            target_metric: Métrique cible (ex: 'canopy_height')
+            target_metric: Métrique cible du modèle
+            params: Paramètres du modèle
             
         Returns:
-            Chemin complet du fichier modèle
+            Identifiant unique du modèle
         """
-        return os.path.join(
-            self.models_dir, 
-            f"{parcel_id}_{model_type}_{target_metric}.joblib"
-        )
+        # Créer une chaîne représentant les paramètres
+        param_str = json.dumps(params, sort_keys=True)
+        model_info = f"{parcel_id}_{target_metric}_{param_str}"
+        
+        # Générer un hash pour l'identifiant du modèle
+        model_id = hashlib.md5(model_info.encode()).hexdigest()
+        
+        return model_id
     
-    def save_model(self, model: GrowthPredictionModel, model_path: str) -> None:
+    def get_model_path(self, model_id: str) -> str:
         """
-        Sauvegarde un modèle entraîné.
+        Obtient le chemin d'accès complet pour un modèle.
+        
+        Args:
+            model_id: Identifiant du modèle
+            
+        Returns:
+            Chemin d'accès complet au fichier du modèle
+        """
+        return os.path.join(self.models_dir, f"{model_id}.pkl")
+    
+    def save_model(self, model: Any, parcel_id: str, target_metric: str, 
+                  params: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Sauvegarde un modèle entraîné avec ses métadonnées.
         
         Args:
             model: Modèle entraîné à sauvegarder
-            model_path: Chemin où sauvegarder le modèle
-        """
-        try:
-            joblib.dump(model, model_path)
-            logger.info(f"Modèle sauvegardé avec succès: {model_path}")
-        except Exception as e:
-            logger.error(f"Erreur lors de la sauvegarde du modèle {model_path}: {str(e)}")
-    
-    def load_model(self, model_path: str) -> Optional[GrowthPredictionModel]:
-        """
-        Charge un modèle précédemment entraîné.
-        
-        Args:
-            model_path: Chemin du modèle à charger
+            parcel_id: Identifiant de la parcelle
+            target_metric: Métrique cible du modèle
+            params: Paramètres du modèle
+            metadata: Métadonnées supplémentaires à stocker avec le modèle
             
         Returns:
-            Modèle chargé ou None si le chargement échoue
+            Identifiant du modèle sauvegardé
         """
+        # Générer l'identifiant du modèle
+        model_id = self.generate_model_id(parcel_id, target_metric, params)
+        model_path = self.get_model_path(model_id)
+        
+        # Préparer les métadonnées
+        if metadata is None:
+            metadata = {}
+        
+        metadata.update({
+            'parcel_id': parcel_id,
+            'target_metric': target_metric,
+            'params': params,
+            'saved_at': datetime.now().isoformat(),
+            'model_id': model_id
+        })
+        
+        # Créer un bundle avec le modèle et ses métadonnées
+        model_bundle = {
+            'model': model,
+            'metadata': metadata
+        }
+        
+        # Sauvegarder le bundle
+        with open(model_path, 'wb') as f:
+            pickle.dump(model_bundle, f)
+        
+        self._logger.info(f"Modèle sauvegardé: {model_id} ({target_metric} pour parcelle {parcel_id})")
+        
+        return model_id
+    
+    @cached(data_type=CacheType.MODEL, policy=CachePolicy.DAILY)
+    def load_model(self, model_id: str) -> Tuple[Any, Dict[str, Any]]:
+        """
+        Charge un modèle sauvegardé et ses métadonnées.
+        
+        Args:
+            model_id: Identifiant du modèle à charger
+            
+        Returns:
+            Tuple contenant (modèle, métadonnées)
+            
+        Raises:
+            FileNotFoundError: Si le modèle n'existe pas
+        """
+        model_path = self.get_model_path(model_id)
+        
         if not os.path.exists(model_path):
-            logger.info(f"Aucun modèle existant trouvé à {model_path}")
-            return None
+            raise FileNotFoundError(f"Modèle non trouvé: {model_id}")
         
-        try:
-            model = joblib.load(model_path)
-            logger.info(f"Modèle chargé avec succès: {model_path}")
-            return model
-        except Exception as e:
-            logger.warning(f"Erreur lors du chargement du modèle {model_path}: {str(e)}")
-            return None
+        # Charger le bundle
+        with open(model_path, 'rb') as f:
+            model_bundle = pickle.load(f)
+        
+        model = model_bundle['model']
+        metadata = model_bundle['metadata']
+        
+        self._logger.debug(f"Modèle chargé: {model_id} ({metadata.get('target_metric', 'inconnu')} "
+                          f"pour parcelle {metadata.get('parcel_id', 'inconnue')})")
+        
+        return model, metadata
     
-    def select_best_model(self, 
-                        time_series_data: pd.DataFrame, 
-                        target_metric: str,
-                        test_ratio: float = 0.2) -> Tuple[str, Dict[str, float]]:
+    def find_best_model(self, parcel_id: str, target_metric: str) -> Optional[str]:
         """
-        Sélectionne le meilleur modèle pour les données fournies.
+        Trouve le meilleur modèle existant pour une parcelle et une métrique.
         
         Args:
-            time_series_data: DataFrame contenant les données de série temporelle
-            target_metric: Métrique cible pour la prédiction
-            test_ratio: Proportion des données à utiliser pour le test
+            parcel_id: Identifiant de la parcelle
+            target_metric: Métrique cible
             
         Returns:
-            Tuple contenant le nom du meilleur modèle et ses métriques
+            Identifiant du meilleur modèle trouvé, ou None si aucun modèle n'est disponible
         """
-        best_score = float('inf')
-        best_model_name = None
-        best_metrics = {}
+        best_model_id = None
+        best_score = float('-inf')
         
-        # Pour chaque type de modèle disponible
-        for model_name, model_class in self._available_models.items():
-            try:
-                # Diviser les données en ensembles d'entraînement et de test
-                split_idx = int(len(time_series_data) * (1 - test_ratio))
-                if split_idx < 5:  # Vérifier qu'il y a suffisamment de données
-                    logger.warning("Pas assez de données pour une sélection fiable de modèle")
-                    return "sarima", {}  # Retourner le modèle par défaut
-                
-                train_data = time_series_data.iloc[:split_idx]
-                test_data = time_series_data.iloc[split_idx:]
-                
-                # Initialiser et entraîner le modèle
-                model = model_class()
-                model.train(train_data, target_metric)
-                
-                # Évaluer le modèle
-                metrics = model.evaluate(test_data, target_metric)
-                mse = metrics.get('mse', float('inf'))
-                
-                if mse < best_score:
-                    best_score = mse
-                    best_model_name = model_name
-                    best_metrics = metrics
-                    
-                logger.info(f"Modèle {model_name} évalué, MSE: {mse}")
-                
-            except Exception as e:
-                logger.warning(f"Erreur lors de l'évaluation du modèle {model_name}: {str(e)}")
-        
-        if best_model_name is None:
-            logger.warning("Aucun modèle n'a pu être évalué correctement, utilisation du modèle par défaut")
-            best_model_name = "sarima"
+        # Parcourir tous les fichiers de modèles
+        for filename in os.listdir(self.models_dir):
+            if not filename.endswith('.pkl'):
+                continue
             
-        return best_model_name, best_metrics
+            try:
+                # Extraire l'identifiant du modèle
+                model_id = filename[:-4]  # Enlever l'extension .pkl
+                
+                # Charger les métadonnées du modèle
+                _, metadata = self.load_model(model_id)
+                
+                # Vérifier si le modèle correspond à la parcelle et à la métrique
+                if (metadata.get('parcel_id') == parcel_id and 
+                    metadata.get('target_metric') == target_metric):
+                    
+                    # Vérifier s'il y a un score dans les métadonnées
+                    model_score = metadata.get('validation_score', float('-inf'))
+                    
+                    # Mettre à jour le meilleur modèle si nécessaire
+                    if model_score > best_score:
+                        best_score = model_score
+                        best_model_id = model_id
+            
+            except Exception as e:
+                self._logger.warning(f"Erreur lors du chargement du modèle {filename}: {str(e)}")
+        
+        if best_model_id:
+            self._logger.info(f"Meilleur modèle trouvé pour {target_metric} (parcelle {parcel_id}): {best_model_id}")
+        else:
+            self._logger.info(f"Aucun modèle trouvé pour {target_metric} (parcelle {parcel_id})")
+        
+        return best_model_id
+    
+    def delete_model(self, model_id: str) -> bool:
+        """
+        Supprime un modèle sauvegardé.
+        
+        Args:
+            model_id: Identifiant du modèle à supprimer
+            
+        Returns:
+            True si la suppression a réussi, False sinon
+        """
+        model_path = self.get_model_path(model_id)
+        
+        if not os.path.exists(model_path):
+            self._logger.warning(f"Tentative de suppression d'un modèle inexistant: {model_id}")
+            return False
+        
+        try:
+            os.remove(model_path)
+            self._logger.info(f"Modèle supprimé: {model_id}")
+            return True
+        except Exception as e:
+            self._logger.error(f"Erreur lors de la suppression du modèle {model_id}: {str(e)}")
+            return False
+    
+    def list_models(self, parcel_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Liste tous les modèles disponibles, éventuellement filtrés par parcelle.
+        
+        Args:
+            parcel_id: Identifiant de parcelle pour filtrer les modèles (optionnel)
+            
+        Returns:
+            Liste des métadonnées des modèles disponibles
+        """
+        models_info = []
+        
+        # Parcourir tous les fichiers de modèles
+        for filename in os.listdir(self.models_dir):
+            if not filename.endswith('.pkl'):
+                continue
+            
+            try:
+                # Extraire l'identifiant du modèle
+                model_id = filename[:-4]  # Enlever l'extension .pkl
+                
+                # Charger les métadonnées du modèle
+                _, metadata = self.load_model(model_id)
+                
+                # Filtrer par parcelle si nécessaire
+                if parcel_id is None or metadata.get('parcel_id') == parcel_id:
+                    models_info.append(metadata)
+            
+            except Exception as e:
+                self._logger.warning(f"Erreur lors du chargement du modèle {filename}: {str(e)}")
+        
+        return models_info
