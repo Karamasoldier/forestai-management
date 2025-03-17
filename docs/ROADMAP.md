@@ -61,6 +61,8 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 - ✅ Parallélisation et traitement par lots pour les grands volumes de données sanitaires
 - ✅ Mise en œuvre des exemples d'utilisation des fonctionnalités optimisées
 - ✅ Développement du DocumentAgent pour la génération de documents administratifs
+- ✅ Implémentation des générateurs de documents pour les contrats et cahiers des charges
+- ✅ Implémentation des générateurs pour les plans de gestion et documents administratifs
 
 ### Objectifs en cours
 
@@ -112,7 +114,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ReportGenerator | 100% | Système de génération de rapports multiformat complet et modulaire |
 | HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
 | OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
-| DocumentAgent | 85% | Module de génération de documents administratifs implémenté : contrats, cahiers des charges |
+| DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
 | ExploitantAgent | 0% | Planifié pour phase ultérieure |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
@@ -124,7 +126,6 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 - **Q2 2025**: Finalisation Phase 3
   - Tests de régression automatisés
-  - Finalisation du DocumentAgent
   - Premières fonctionnalités de l'ExploitantAgent
 
 - **Q3 2025**: Suite Phase 3
@@ -161,4 +162,4 @@ Le projet évolue selon trois principes directeurs :
 2. **APIs stables** - Les interfaces entre modules sont conçues pour minimiser les changements cassants
 3. **Évolution incrémentale** - Nouvelles fonctionnalités livrées progressivement en restant utilisables
 
-Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 15 Mars 2025.
+Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 17 Mars 2025.
