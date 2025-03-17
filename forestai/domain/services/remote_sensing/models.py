@@ -1,204 +1,186 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Modèles de données pour l'intégration de télédétection.
 
-Ce module définit les structures de données utilisées pour représenter
-et manipuler les données de télédétection dans le système ForestAI.
+"""
+Modèles de données pour le module de télédétection.
+
+Ce module définit les classes et structures de données utilisées
+par le module de télédétection.
 """
 
+from typing import Dict, List, Tuple, Union, Optional
 from datetime import datetime
+from enum import Enum
 from dataclasses import dataclass
-from typing import Dict, List, Any, Optional, Tuple, Union
-from enum import Enum, auto
-import numpy as np
-import pandas as pd
-from pathlib import Path
 
 
 class RemoteSensingSource(Enum):
-    """Source des données de télédétection."""
-    SENTINEL_2 = auto()  # Imagerie satellite optique Sentinel-2
-    SENTINEL_1 = auto()  # Imagerie satellite radar Sentinel-1
-    LANDSAT_8 = auto()   # Imagerie satellite Landsat 8
-    LANDSAT_9 = auto()   # Imagerie satellite Landsat 9
-    SPOT = auto()        # Imagerie SPOT
-    MODIS = auto()       # Imagerie MODIS
-    DRONE = auto()       # Imagerie par drone
-    LIDAR_AERIEN = auto()  # LIDAR aéroporté
-    LIDAR_TERRESTRE = auto()  # LIDAR terrestre
-    LIDAR_DRONE = auto()  # LIDAR embarqué sur drone
-    PLANET = auto()      # Imagerie PlanetScope
-    RAPIDEYE = auto()    # Imagerie RapidEye
-    AUTRE = auto()       # Autre source
+    """Énumération des sources de données de télédétection."""
+    SENTINEL_2 = "sentinel2"
+    LANDSAT_8 = "landsat8"
+    LANDSAT_9 = "landsat9"
+    LIDAR = "lidar"
+    AERIAL = "aerial"
+    PLANETSCOPE = "planetscope"
+    DRONE = "drone"
+    OTHER = "other"
 
 
 class VegetationIndex(Enum):
-    """Indices de végétation calculables à partir d'images satellite."""
-    NDVI = "Normalized Difference Vegetation Index"  # (NIR - Red) / (NIR + Red)
-    EVI = "Enhanced Vegetation Index"                # 2.5 * ((NIR - Red) / (NIR + 6*Red - 7.5*Blue + 1))
-    NDMI = "Normalized Difference Moisture Index"    # (NIR - SWIR) / (NIR + SWIR)
-    NBR = "Normalized Burn Ratio"                    # (NIR - SWIR) / (NIR + SWIR)
-    LAI = "Leaf Area Index"                          # Indice de surface foliaire
-    FAPAR = "Fraction of Absorbed Photosynthetically Active Radiation"  # Fraction du rayonnement absorbé
-    GNDVI = "Green Normalized Difference Vegetation Index"  # (NIR - Green) / (NIR + Green)
-    SAVI = "Soil Adjusted Vegetation Index"          # ((NIR - Red) / (NIR + Red + L)) * (1 + L), où L est un facteur d'ajustement
-    MSAVI = "Modified Soil Adjusted Vegetation Index"  # 0.5 * (2 * NIR + 1 - sqrt((2 * NIR + 1)^2 - 8 * (NIR - Red)))
-    NDRE = "Normalized Difference Red Edge"          # (NIR - RedEdge) / (NIR + RedEdge)
+    """Énumération des indices de végétation."""
+    NDVI = "ndvi"  # Normalized Difference Vegetation Index
+    EVI = "evi"    # Enhanced Vegetation Index
+    NDMI = "ndmi"  # Normalized Difference Moisture Index
+    NDWI = "ndwi"  # Normalized Difference Water Index
+    LAI = "lai"    # Leaf Area Index
+    SAVI = "savi"  # Soil Adjusted Vegetation Index
+    MSAVI = "msavi"  # Modified Soil Adjusted Vegetation Index
+    GNDVI = "gndvi"  # Green Normalized Difference Vegetation Index
+    NBR = "nbr"    # Normalized Burn Ratio
+    NDRE = "ndre"  # Normalized Difference Red Edge
 
 
 @dataclass
 class SatelliteImageMetadata:
-    """Métadonnées associées à une image satellite."""
-    source: RemoteSensingSource                  # Source de l'image
-    acquisition_date: datetime                   # Date d'acquisition
-    cloud_cover_percentage: float                # Pourcentage de couverture nuageuse
-    spatial_resolution: float                    # Résolution spatiale en mètres
-    bands: List[str]                             # Liste des bandes spectrales disponibles
-    utm_zone: str                                # Zone UTM
-    epsg_code: int                               # Code EPSG de la projection
-    footprint: Optional[Dict[str, Any]] = None   # Empreinte géographique en GeoJSON
-    sun_elevation: Optional[float] = None        # Élévation du soleil (degrés)
-    sun_azimuth: Optional[float] = None          # Azimut du soleil (degrés)
-    tile_id: Optional[str] = None                # Identifiant de la tuile
-    metadata_url: Optional[str] = None           # URL des métadonnées complètes
-    provider: Optional[str] = None               # Fournisseur de données
-    processing_level: Optional[str] = None       # Niveau de traitement
+    """Métadonnées d'une image satellite."""
+    acquisition_date: datetime
+    source: RemoteSensingSource
+    cloud_cover_percentage: float
+    spatial_resolution: float  # en mètres
+    scene_id: str
+    bands: List[str]
+    path: Optional[str] = None
+    utm_zone: Optional[str] = None
+    epsg_code: Optional[int] = None
+    processing_level: Optional[str] = None
+    sensor: Optional[str] = None
+    sun_azimuth: Optional[float] = None
+    sun_elevation: Optional[float] = None
 
 
 @dataclass
 class LidarPointCloudMetadata:
-    """Métadonnées associées à un nuage de points LIDAR."""
-    source: RemoteSensingSource                   # Source des données LIDAR
-    acquisition_date: datetime                    # Date d'acquisition
-    point_density: float                          # Densité de points (points/m²)
-    num_returns: int                              # Nombre de retours
-    classification_available: bool                # Indique si les points sont classifiés
-    epsg_code: int                                # Code EPSG de la projection
-    vertical_accuracy: Optional[float] = None     # Précision verticale (m)
-    horizontal_accuracy: Optional[float] = None   # Précision horizontale (m)
-    pulse_rate: Optional[float] = None            # Fréquence d'impulsion (kHz)
-    scan_angle: Optional[float] = None            # Angle de balayage (degrés)
-    footprint: Optional[Dict[str, Any]] = None    # Empreinte géographique en GeoJSON
-    sensor_model: Optional[str] = None            # Modèle du capteur LIDAR
-    flight_height: Optional[float] = None         # Hauteur de vol (m)
-    provider: Optional[str] = None                # Fournisseur de données
-    processing_level: Optional[str] = None        # Niveau de traitement
+    """Métadonnées d'un nuage de points LIDAR."""
+    acquisition_date: datetime
+    point_density: float  # points par m²
+    vertical_accuracy: float  # en mètres
+    horizontal_accuracy: float  # en mètres
+    classification_scheme: Optional[Dict[int, str]] = None
+    epsg_code: Optional[int] = None
+    sensor: Optional[str] = None
+    platform: Optional[str] = None
+    processing_level: Optional[str] = None
+    path: Optional[str] = None
+    point_formats: Optional[List[str]] = None
+    return_types: Optional[List[str]] = None
 
 
 @dataclass
 class ForestMetrics:
-    """Métriques forestières calculées à partir des données de télédétection."""
-    parcel_id: str                                  # Identifiant de la parcelle
-    date: datetime                                  # Date des métriques
-    source: RemoteSensingSource                     # Source de données
-    
-    # Métriques de couvert forestier
-    canopy_cover_percentage: Optional[float] = None  # Pourcentage de couvert forestier
-    canopy_height_mean: Optional[float] = None       # Hauteur moyenne de la canopée (m)
-    canopy_height_max: Optional[float] = None        # Hauteur maximale de la canopée (m)
-    canopy_height_std: Optional[float] = None        # Écart type des hauteurs de canopée (m)
-    
-    # Métriques de structure
-    stem_density: Optional[float] = None             # Densité de tiges (tiges/ha)
-    basal_area: Optional[float] = None               # Surface terrière (m²/ha)
-    volume: Optional[float] = None                   # Volume de bois (m³/ha)
-    biomass: Optional[float] = None                  # Biomasse (t/ha)
-    
-    # Métriques de santé et vigueur
-    vegetation_indices: Optional[Dict[VegetationIndex, float]] = None  # Indices de végétation
-    stress_indicators: Optional[Dict[str, float]] = None              # Indicateurs de stress
-    
-    # Métriques de diversité
-    vertical_complexity: Optional[float] = None      # Indice de complexité verticale
-    horizontal_heterogeneity: Optional[float] = None # Indice d'hétérogénéité horizontale
-    
-    # Métriques spécifiques au LIDAR
-    tree_count: Optional[int] = None                 # Nombre d'arbres détectés
-    tree_positions: Optional[List[Tuple[float, float, float]]] = None  # Positions des arbres (x, y, hauteur)
-    understory_density: Optional[float] = None       # Densité du sous-étage
-    
-    # Métriques d'évolution temporelle (si disponibles)
-    growth_rate: Optional[float] = None              # Taux de croissance (m/an)
-    
-    # Métriques de qualité des données
-    quality_score: Optional[float] = None            # Score de qualité des métriques (0-1)
-    processing_notes: Optional[str] = None           # Notes sur le traitement
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convertit les métriques en dictionnaire."""
-        result = {k: v for k, v in self.__dict__.items() if v is not None}
-        
-        # Convertir les dictionnaires d'enum en dictionnaires de chaînes de caractères
-        if self.vegetation_indices:
-            result['vegetation_indices'] = {k.name: v for k, v in self.vegetation_indices.items()}
-        
-        return result
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ForestMetrics':
-        """Crée une instance de ForestMetrics à partir d'un dictionnaire."""
-        
-        # Convertir la source en Enum
-        if isinstance(data.get('source'), str):
-            data['source'] = RemoteSensingSource[data['source']]
-        
-        # Convertir les indices de végétation en Enum
-        if 'vegetation_indices' in data and data['vegetation_indices']:
-            data['vegetation_indices'] = {
-                VegetationIndex[k]: v for k, v in data['vegetation_indices'].items()
-            }
-        
-        # Convertir la date si nécessaire
-        if isinstance(data.get('date'), str):
-            data['date'] = datetime.fromisoformat(data['date'])
-        
-        return cls(**data)
+    """Métriques forestières dérivées des données de télédétection."""
+    canopy_height: Optional[float] = None  # hauteur moyenne de la canopée (m)
+    basal_area: Optional[float] = None  # surface terrière (m²/ha)
+    stem_density: Optional[float] = None  # densité des tiges (tiges/ha)
+    canopy_cover: Optional[float] = None  # couverture de la canopée (%)
+    leaf_area_index: Optional[float] = None  # indice de surface foliaire
+    biomass: Optional[float] = None  # biomasse (kg/ha)
+    carbon_stock: Optional[float] = None  # stock de carbone (kg/ha)
+    height_variation: Optional[float] = None  # variation de hauteur (coefficient)
 
 
 @dataclass
 class RemoteSensingData:
-    """Données de télédétection pour une parcelle forestière."""
-    parcel_id: str                                   # Identifiant de la parcelle
-    source: RemoteSensingSource                      # Source de données
-    acquisition_date: datetime                       # Date d'acquisition
-    # Un des types de données suivants sera non-None
-    raster_path: Optional[Path] = None               # Chemin vers les données raster
-    point_cloud_path: Optional[Path] = None          # Chemin vers le nuage de points
+    """
+    Représente un ensemble de données de télédétection pour une parcelle forestière.
+    """
+    parcel_id: str
+    acquisition_date: datetime
+    source: RemoteSensingSource
+    metrics: ForestMetrics
+    vegetation_indices: Optional[Dict[VegetationIndex, float]] = None
+    metadata: Optional[Union[SatelliteImageMetadata, LidarPointCloudMetadata]] = None
+    processing_history: Optional[List[str]] = None
+    quality_flags: Optional[Dict[str, bool]] = None
+
+
+@dataclass
+class ForestGrowthPrediction:
+    """
+    Représente une prédiction de croissance forestière sur une période future.
+    """
+    parcel_id: str
+    prediction_date: datetime
+    # Liste de tuples (date, métriques, intervalles de confiance)
+    predictions: List[Tuple[datetime, ForestMetrics, Dict[str, Tuple[float, float]]]]
+    model_type: str  # Type de modèle utilisé (sarima, exp_smoothing, random_forest)
+    confidence_level: float  # Niveau de confiance pour les intervalles (ex: 0.95)
+    metrics: Dict[str, Dict[str, any]]  # Métriques de performance du modèle
+    climate_scenario: Optional[str] = None  # Scénario climatique utilisé (si applicable)
     
-    # Métadonnées associées
-    satellite_metadata: Optional[SatelliteImageMetadata] = None  # Métadonnées satellite
-    lidar_metadata: Optional[LidarPointCloudMetadata] = None     # Métadonnées LIDAR
-    
-    # Métriques forestières calculées
-    metrics: Optional[ForestMetrics] = None          # Métriques forestières calculées
-    
-    # Données en mémoire (optionnel, pour le traitement)
-    raster_data: Optional[np.ndarray] = None         # Données raster en mémoire
-    point_cloud_data: Optional[pd.DataFrame] = None  # Nuage de points en mémoire
-    
-    # Informations sur le traitement
-    processed: bool = False                          # Indique si les données ont été traitées
-    processing_timestamp: Optional[datetime] = None  # Date du dernier traitement
-    processing_version: Optional[str] = None         # Version du traitement
-    
-    def __post_init__(self):
-        """Validation après initialisation."""
-        # Vérifier qu'au moins un type de données est spécifié
-        if self.raster_path is None and self.point_cloud_path is None:
-            raise ValueError("Au moins un chemin de données (raster ou nuage de points) doit être spécifié")
+    def get_prediction_at_date(self, target_date: datetime) -> Tuple[Optional[ForestMetrics], Optional[Dict[str, Tuple[float, float]]]]:
+        """
+        Récupère la prédiction pour une date spécifique.
         
-        # Vérifier la cohérence des métadonnées
-        is_satellite = self.source in (RemoteSensingSource.SENTINEL_2, RemoteSensingSource.SENTINEL_1,
-                                      RemoteSensingSource.LANDSAT_8, RemoteSensingSource.LANDSAT_9,
-                                      RemoteSensingSource.SPOT, RemoteSensingSource.MODIS,
-                                      RemoteSensingSource.PLANET, RemoteSensingSource.RAPIDEYE)
+        Args:
+            target_date: Date cible pour la prédiction
         
-        is_lidar = self.source in (RemoteSensingSource.LIDAR_AERIEN, RemoteSensingSource.LIDAR_TERRESTRE,
-                                  RemoteSensingSource.LIDAR_DRONE)
+        Returns:
+            Tuple contenant les métriques forestières prédites et les intervalles de confiance,
+            ou (None, None) si aucune prédiction n'est disponible pour cette date
+        """
+        # Trouver la date la plus proche si la date exacte n'existe pas
+        closest_prediction = None
+        min_diff = float('inf')
         
-        if is_satellite and self.satellite_metadata is None:
-            raise ValueError(f"Les métadonnées satellite sont requises pour la source {self.source}")
+        for date, metrics, intervals in self.predictions:
+            diff = abs((target_date - date).total_seconds())
+            if diff < min_diff:
+                min_diff = diff
+                closest_prediction = (metrics, intervals)
         
-        if is_lidar and self.lidar_metadata is None:
-            raise ValueError(f"Les métadonnées LIDAR sont requises pour la source {self.source}")
+        return closest_prediction if closest_prediction else (None, None)
+    
+    def get_growth_rate(self, metric_name: str) -> Optional[Dict[str, float]]:
+        """
+        Calcule le taux de croissance pour une métrique spécifique.
+        
+        Args:
+            metric_name: Nom de la métrique (ex: 'canopy_height', 'basal_area')
+        
+        Returns:
+            Dictionnaire avec les taux de croissance annuels, ou None si impossible à calculer
+        """
+        if not self.predictions or len(self.predictions) < 2:
+            return None
+        
+        # Trier les prédictions par date
+        sorted_predictions = sorted(self.predictions, key=lambda x: x[0])
+        
+        # Extraire les valeurs de la métrique à chaque date
+        metric_values = []
+        dates = []
+        
+        for date, metrics, _ in sorted_predictions:
+            value = getattr(metrics, metric_name, None)
+            if value is not None:
+                metric_values.append(value)
+                dates.append(date)
+        
+        if len(metric_values) < 2:
+            return None
+        
+        # Calculer les taux de croissance
+        growth_rates = {}
+        first_date = dates[0]
+        first_value = metric_values[0]
+        
+        for i, (date, value) in enumerate(zip(dates[1:], metric_values[1:])):
+            # Calcul du nombre d'années entre la date initiale et la date courante
+            years = (date - first_date).days / 365.25
+            
+            if years > 0 and first_value > 0:
+                # Taux de croissance annuel composé
+                cagr = ((value / first_value) ** (1 / years) - 1) * 100
+                growth_rates[date.strftime("%Y-%m-%d")] = cagr
+        
+        return growth_rates
