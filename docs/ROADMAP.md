@@ -70,10 +70,16 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Gestionnaire des performances (PerformanceManager)
     - ✅ Intégration des modèles de données
     - ✅ Exemples d'utilisation
+- ✅ Système de recommandation d'espèces forestières (base)
+    - ✅ Modèles de données pour les espèces forestières
+    - ✅ Système de scoring et de recommandation
+    - ✅ Calcul de compatibilité climatique et pédologique
+    - ✅ Évaluation des risques et du potentiel économique/écologique
+    - ✅ Exemples d'utilisation
 
 ### Objectifs en cours
 
-- 🔄 Système avancé de recommandation d'espèces basé sur ML
+- 🔄 Extension du système de recommandation d'espèces avec ML
 - 🔄 Intégration des données de télédétection (satellite, LIDAR)
 
 ### Objectifs planifiés
@@ -121,6 +127,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
 | DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
+| SpeciesRecommender | 65% | Base du système de recommandation implémentée, intégration ML en cours |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
@@ -130,7 +137,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 3
-  - Système de recommandation d'espèces
+  - Système de recommandation d'espèces avec ML
   - Intégration des données de télédétection
 
 - **Q3 2025**: Suite Phase 3
@@ -149,7 +156,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Système de recommandation d'espèces** - Développement du moteur de recommandation basé sur ML
+1. **Extension du système de recommandation d'espèces** - Intégration de modèles de ML pour améliorer les recommandations
 2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
 3. **Intégration données de télédétection** - Support pour les données satellite et LIDAR
 4. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
