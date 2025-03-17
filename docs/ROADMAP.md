@@ -63,14 +63,15 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
 - ✅ Développement du DocumentAgent pour la génération de documents administratifs
 - ✅ Implémentation des générateurs de documents pour les contrats et cahiers des charges
 - ✅ Implémentation des générateurs pour les plans de gestion et documents administratifs
+- ✅ Implémentation des tests de régression automatisés
+- ✅ Création de la structure de base de l'ExploitantAgent pour la gestion des opérateurs forestiers
 
 ### Objectifs en cours
 
-- 🔄 Implémentation des tests de régression automatisés
+- 🔄 Implémentation complète de l'ExploitantAgent
 
 ### Objectifs planifiés
 
-- ⏳ Création de l'ExploitantAgent pour la gestion des opérateurs forestiers
 - ⏳ Système avancé de recommandation d'espèces basé sur ML
 - ⏳ Intégration des données de télédétection (satellite, LIDAR)
 - ⏳ Prédiction de croissance forestière avec série temporelle
@@ -115,26 +116,25 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
 | OptimizedHealthAnalyzer | 100% | Version optimisée avec parallélisation et traitement par lots pour grands volumes de données |
 | DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
-| ExploitantAgent | 0% | Planifié pour phase ultérieure |
+| ExploitantAgent | 20% | Structure de base implémentée, modèles et gestionnaires en cours de développement |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
-| Tests | 75% | Tests unitaires étendus, tests d'intégration de base pour tous les agents |
+| Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
 | Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
 | Optimisation | 80% | Parallélisation des analyses sanitaires implémentée, autres analyses en cours d'optimisation |
 
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 3
-  - Tests de régression automatisés
-  - Premières fonctionnalités de l'ExploitantAgent
+  - Implémentation complète de l'ExploitantAgent
+  - Premières fonctionnalités du système de recommandation d'espèces
 
 - **Q3 2025**: Suite Phase 3
   - Intégration des données de télédétection
   - Interface utilisateur web basique
-  - Système de recommandation d'espèces
+  - Système complet de recommandation d'espèces
 
 - **Q4 2025**: Suite Phase 3
-  - Implémentation complète de l'ExploitantAgent
   - Tableau de bord de suivi forestier
   - Prédiction de croissance forestière
 
@@ -146,11 +146,12 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-2. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
-3. **Documentation** - Amélioration des guides d'utilisation et exemples
-4. **Visualisation** - Amélioration de la génération de cartes et rapports
-5. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
+1. **ExploitantAgent** - Finalisation des gestionnaires et de l'intégration avec les autres agents
+2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
+3. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
+4. **Documentation** - Amélioration des guides d'utilisation et exemples
+5. **Visualisation** - Amélioration de la génération de cartes et rapports
+6. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
 
 Pour contribuer, consultez le fichier [CONTRIBUTING.md](../CONTRIBUTING.md) pour les instructions et les bonnes pratiques.
 
