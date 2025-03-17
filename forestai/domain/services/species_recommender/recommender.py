@@ -42,7 +42,7 @@ class SpeciesRecommender:
     adaptées aux conditions environnementales d'une parcelle.
     """
     
-    def __init__(self, data_dir: Optional[Path] = None, climate_analyzer=None, geo_agent=None):
+    def __init__(self, data_dir: Optional[Path] = None, climate_analyzer=None, geo_agent=None, use_ml: bool = True):
         """
         Initialise le système de recommandation d'espèces.
         
@@ -50,6 +50,7 @@ class SpeciesRecommender:
             data_dir: Répertoire de stockage des données (facultatif)
             climate_analyzer: Instance du ClimateAnalyzer (facultatif)
             geo_agent: Instance du GeoAgent (facultatif)
+            use_ml: Utiliser les capacités ML si disponibles
         """
         # Si aucun répertoire n'est spécifié, utiliser le dossier par défaut
         if data_dir is None:
@@ -69,16 +70,22 @@ class SpeciesRecommender:
         self.climate_analyzer = climate_analyzer
         self.geo_agent = geo_agent
         
-        # Charger les modèles ML si disponibles
-        self._load_ml_models()
+        # Initialiser le recommandeur ML si demandé
+        self.use_ml = use_ml
+        self.ml_recommender = None
+        if use_ml:
+            try:
+                from forestai.domain.services.species_recommender.ml_recommender import MLSpeciesRecommender
+                self.ml_recommender = MLSpeciesRecommender()
+                if self.ml_recommender.initialized:
+                    logger.info("MLSpeciesRecommender initialisé avec succès")
+                else:
+                    logger.warning("MLSpeciesRecommender initialisé mais modèles non chargés")
+            except (ImportError, Exception) as e:
+                logger.warning(f"Impossible d'initialiser MLSpeciesRecommender: {str(e)}")
+                self.ml_recommender = None
         
         logger.info("SpeciesRecommender initialisé")
-    
-    def _load_ml_models(self):
-        """Charge les modèles ML utilisés pour les recommandations."""
-        # TODO: Implémenter le chargement des modèles ML
-        self.models_loaded = False
-        logger.info("Modèles ML non chargés (à implémenter)")
     
     def get_species_data(self) -> Dict[str, SpeciesData]:
         """
@@ -122,11 +129,40 @@ class SpeciesRecommender:
         # Charger les données d'espèces
         species_data = self.get_species_data()
         
+        # Utiliser le modèle ML si disponible et applicable
+        use_ml_for_this = self.use_ml and self.ml_recommender and self.ml_recommender.initialized
+        
+        # Logger l'approche utilisée
+        if use_ml_for_this:
+            logger.info(f"Utilisation du ML pour la recommandation (parcelle {parcel_id})")
+        else:
+            logger.info(f"Utilisation de l'approche classique pour la recommandation (parcelle {parcel_id})")
+        
         # Calculer les scores pour chaque espèce
         scores = []
         
         for species_id, species in species_data.items():
-            # Calculer les scores individuels
+            # Utiliser l'approche ML ou classique selon la disponibilité
+            if use_ml_for_this:
+                # Prédire les scores avec le ML
+                predicted_scores = self.ml_recommender.predict_scores(species, climate_data, soil_data, context)
+                
+                if predicted_scores:
+                    # Créer l'objet de score à partir des prédictions
+                    score = RecommendationScore(
+                        species_id=species_id,
+                        overall_score=predicted_scores.get('overall_score', 0),
+                        climate_score=predicted_scores.get('climate_score', 0),
+                        soil_score=predicted_scores.get('soil_score', 0),
+                        economic_score=predicted_scores.get('economic_score', 0),
+                        ecological_score=predicted_scores.get('ecological_score', 0),
+                        risk_score=predicted_scores.get('risk_score', 0),
+                        score_details=predicted_scores
+                    )
+                    scores.append(score)
+                    continue
+            
+            # Approche classique (formules) si ML non disponible ou si la prédiction ML a échoué
             climate_score = calculate_climate_score(species, climate_data)
             soil_score = calculate_soil_score(species, soil_data)
             economic_score = calculate_economic_score(species, context)
@@ -187,7 +223,7 @@ class SpeciesRecommender:
         metadata = {
             "generated_at": datetime.now().isoformat(),
             "version": "1.0.0",
-            "model_version": "ML model not used"
+            "model_version": "ML model" if use_ml_for_this else "Classic formulas"
         }
         
         # Créer l'objet de recommandation
@@ -368,3 +404,170 @@ class SpeciesRecommender:
         except Exception as e:
             logger.error(f"Erreur lors de l'ajout/mise à jour de l'espèce: {str(e)}")
             return False
+    
+    def train_ml_models(self, n_samples: int = 1000) -> Dict[str, Any]:
+        """
+        Entraîne les modèles ML du recommandeur d'espèces.
+        
+        Args:
+            n_samples: Nombre d'échantillons d'entraînement à générer
+            
+        Returns:
+            Résultats de l'entraînement
+        """
+        # Vérifier si le MLSpeciesRecommender est disponible
+        if not self.ml_recommender:
+            logger.error("MLSpeciesRecommender non initialisé, impossible d'entraîner les modèles")
+            return {"status": "error", "message": "MLSpeciesRecommender non initialisé"}
+        
+        try:
+            # Importer les utilitaires d'entraînement
+            from forestai.domain.services.species_recommender.ml_models.train_utils import (
+                generate_training_data,
+                train_models
+            )
+            
+            # Charger les données d'espèces
+            species_data = self.get_species_data()
+            
+            # Générer des données d'entraînement synthétiques
+            logger.info(f"Génération de {n_samples} échantillons d'entraînement...")
+            training_data = generate_training_data(species_data, n_samples=n_samples)
+            
+            # Entraîner les modèles
+            logger.info("Entraînement des modèles ML...")
+            models, transformers, metrics = train_models(training_data)
+            
+            # Sauvegarder les modèles
+            from forestai.domain.services.species_recommender.ml_models.model_loader import ModelLoader
+            model_loader = ModelLoader(self.ml_recommender.models_dir)
+            model_loader.save_models(models, transformers)
+            
+            # Réinitialiser le MLSpeciesRecommender pour charger les nouveaux modèles
+            from forestai.domain.services.species_recommender.ml_recommender import MLSpeciesRecommender
+            self.ml_recommender = MLSpeciesRecommender()
+            
+            return {
+                "status": "success",
+                "message": "Modèles ML entraînés avec succès",
+                "metrics": metrics
+            }
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de l'entraînement des modèles ML: {str(e)}")
+            return {"status": "error", "message": f"Erreur: {str(e)}"}
+    
+    def get_climate_change_recommendations(self, parcel_id: str, current_climate_data: Dict[str, Any],
+                                          future_climate_data: Dict[str, Any], soil_data: Dict[str, Any],
+                                          context: Dict[str, Any] = None) -> Tuple[SpeciesRecommendation, SpeciesRecommendation, Dict[str, Any]]:
+        """
+        Génère des recommandations pour les scénarios climatiques actuels et futurs.
+        
+        Args:
+            parcel_id: Identifiant de la parcelle
+            current_climate_data: Données climatiques actuelles
+            future_climate_data: Données climatiques futures (scénario de changement climatique)
+            soil_data: Données pédologiques
+            context: Contexte de base pour les recommandations
+        
+        Returns:
+            Tuple de (recommandation actuelle, recommandation future, analyse des différences)
+        """
+        # Initialiser le contexte si non fourni
+        if context is None:
+            context = {"objective": "balanced"}
+        
+        # Créer le contexte pour le scénario actuel
+        current_context = context.copy()
+        current_context["climate_change_scenario"] = "none"
+        
+        # Créer le contexte pour le scénario futur
+        future_context = context.copy()
+        future_context["climate_change_scenario"] = "moderate"
+        
+        # Générer les recommandations
+        current_recommendation = self.recommend_species(
+            f"{parcel_id}-current", current_climate_data, soil_data, current_context
+        )
+        
+        future_recommendation = self.recommend_species(
+            f"{parcel_id}-future", future_climate_data, soil_data, future_context
+        )
+        
+        # Analyser les différences entre les recommandations
+        differences = self._analyze_recommendation_differences(current_recommendation, future_recommendation)
+        
+        return current_recommendation, future_recommendation, differences
+    
+    def _analyze_recommendation_differences(self, current_rec: SpeciesRecommendation, 
+                                          future_rec: SpeciesRecommendation) -> Dict[str, Any]:
+        """
+        Analyse les différences entre deux recommandations (actuelle et future).
+        
+        Args:
+            current_rec: Recommandation pour le climat actuel
+            future_rec: Recommandation pour le climat futur
+            
+        Returns:
+            Dictionnaire des différences et analyses
+        """
+        species_data = self.get_species_data()
+        
+        # Extraire les espèces recommandées pour chaque scénario
+        current_species = {rec['species_id']: (rec['rank'], rec['scores']['overall_score']) 
+                          for rec in current_rec.recommendations}
+        future_species = {rec['species_id']: (rec['rank'], rec['scores']['overall_score']) 
+                         for rec in future_rec.recommendations}
+        
+        # Identifier les espèces qui changent de classement
+        rank_changes = {}
+        for species_id, (current_rank, current_score) in current_species.items():
+            if species_id in future_species:
+                future_rank, future_score = future_species[species_id]
+                rank_diff = current_rank - future_rank
+                score_diff = future_score - current_score
+                
+                if rank_diff != 0:
+                    species = species_data[species_id]
+                    rank_changes[species_id] = {
+                        'species': f"{species.common_name} ({species.latin_name})",
+                        'current_rank': current_rank,
+                        'future_rank': future_rank,
+                        'rank_diff': rank_diff,
+                        'score_diff': score_diff
+                    }
+        
+        # Identifier les espèces qui sont uniquement dans le top 10 actuel
+        only_current_top10 = set(rec['species_id'] for rec in current_rec.recommendations[:10]) - \
+                            set(rec['species_id'] for rec in future_rec.recommendations[:10])
+        
+        # Identifier les espèces qui sont uniquement dans le top 10 futur
+        only_future_top10 = set(rec['species_id'] for rec in future_rec.recommendations[:10]) - \
+                           set(rec['species_id'] for rec in current_rec.recommendations[:10])
+        
+        # Formater les résultats
+        result = {
+            "rank_changes": sorted(rank_changes.values(), key=lambda x: abs(x['rank_diff']), reverse=True),
+            "only_current_top10": [{
+                "species_id": species_id,
+                "common_name": species_data[species_id].common_name,
+                "latin_name": species_data[species_id].latin_name,
+                "rank": next(rec['rank'] for rec in current_rec.recommendations 
+                           if rec['species_id'] == species_id)
+            } for species_id in only_current_top10],
+            "only_future_top10": [{
+                "species_id": species_id,
+                "common_name": species_data[species_id].common_name,
+                "latin_name": species_data[species_id].latin_name,
+                "rank": next(rec['rank'] for rec in future_rec.recommendations 
+                           if rec['species_id'] == species_id)
+            } for species_id in only_future_top10],
+            "summary": {
+                "total_species": len(species_data),
+                "total_changes": len(rank_changes),
+                "improved_species": sum(1 for change in rank_changes.values() if change['rank_diff'] > 0),
+                "degraded_species": sum(1 for change in rank_changes.values() if change['rank_diff'] < 0)
+            }
+        }
+        
+        return result
