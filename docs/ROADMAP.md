@@ -87,6 +87,8 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Extraction de métriques forestières à partir des données de télédétection
     - ✅ Analyse temporelle de la croissance forestière
     - ✅ Intégration avec le système de recommandation d'espèces
+    - ✅ Implémentation modulaire des fournisseurs de données SatelliteDataProvider et LidarDataProvider
+    - ✅ Optimisation des algorithmes d'extraction de métriques forestières
 
 ### Objectifs en cours
 
@@ -125,7 +127,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## État d'avancement actuel
 
 | Module | Progression | Détails |
-|--------|-------------|---------| 
+|--------|-------------|---------|
 | GeoAgent | 95% | Fonctionnalités principales + détection automatique zones prioritaires complètes |
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
@@ -137,12 +139,12 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | DocumentAgent | 100% | Module de génération de documents administratifs complet : contrats, cahiers des charges, plans de gestion, documents administratifs |
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
 | SpeciesRecommender | 100% | Système complet avec base algorithmique, extension ML et analyse climatique ; modularisation et optimisation réalisées |
-| RemoteSensingModule | 100% | Module d'intégration des données de télédétection satellite et LIDAR complet avec extraction de métriques forestières |
+| RemoteSensingModule | 100% | Module d'intégration des données de télédétection satellite et LIDAR complet et modulaire avec extraction de métriques forestières |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
 | Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
-| Optimisation | 85% | Parallélisation des analyses sanitaires implémentée, optimisation du système de recommandation d'espèces réalisée |
+| Optimisation | 90% | Parallélisation des analyses sanitaires et extraction de métriques LIDAR implémentées, optimisation du système de recommandation d'espèces réalisée |
 
 ## Calendrier prévisionnel
 
