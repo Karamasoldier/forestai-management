@@ -10,12 +10,44 @@ from forestai.domain.services.species_recommender.recommender import SpeciesReco
 from forestai.domain.services.species_recommender.models import (
     SpeciesRecommendation,
     RecommendationScore,
-    SpeciesData
+    SpeciesData,
+    SoilType,
+    MoistureRegime,
+    DroughtResistance,
+    FrostResistance,
+    GrowthRate,
+    EconomicValue,
+    EcologicalValue,
+    WoodUse
+)
+from forestai.domain.services.species_recommender.data_loader import SpeciesDataLoader
+from forestai.domain.services.species_recommender.score_calculator import (
+    calculate_climate_score,
+    calculate_soil_score,
+    calculate_economic_score,
+    calculate_ecological_score,
+    calculate_risk_score,
+    calculate_overall_score
 )
 
 __all__ = [
     'SpeciesRecommender',
     'SpeciesRecommendation',
     'RecommendationScore',
-    'SpeciesData'
+    'SpeciesData',
+    'SpeciesDataLoader',
+    'SoilType',
+    'MoistureRegime',
+    'DroughtResistance',
+    'FrostResistance',
+    'GrowthRate',
+    'EconomicValue',
+    'EcologicalValue',
+    'WoodUse',
+    'calculate_climate_score',
+    'calculate_soil_score',
+    'calculate_economic_score',
+    'calculate_ecological_score',
+    'calculate_risk_score',
+    'calculate_overall_score'
 ]
