@@ -1,19 +1,28 @@
-# Requirements pour le DocumentAgent
--r requirements.txt
+# Dépendances pour le module DocumentAgent de ForestAI
+# Génération et manipulation de documents administratifs forestiers
 
-# Templating et génération
+# Templating et rendu
 jinja2>=3.1.2
-pyyaml>=6.0.0
+markdown>=3.4.3
+
+# Génération de PDFs
+weasyprint>=58.1
+reportlab>=3.6.12
+pypdf>=3.14.0
+
+# Génération de DOCX
 python-docx>=0.8.11
-weasyprint>=58.0
-pdfkit>=1.0.0
-html2text>=2020.1.16
-beautifulsoup4>=4.11.1
+docxcompose>=1.4.0
+html-to-docx>=1.5.1
+lxml>=4.9.2
 
-# Validation et traitement
-lxml>=4.9.1
-html5lib>=1.1
-regex>=2022.3.15
+# Validation et traitement des documents
+beautifulsoup4>=4.12.2
+jsonschema>=4.17.3
+pydantic>=2.0.3
+pygments>=2.15.1
 
-# Stockage et organisation
+# Utilitaires
 python-dateutil>=2.8.2
+PyYAML>=6.0.1
+pillow>=9.5.0
