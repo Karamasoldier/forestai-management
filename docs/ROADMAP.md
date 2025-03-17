@@ -89,10 +89,12 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Intégration avec le système de recommandation d'espèces
     - ✅ Implémentation modulaire des fournisseurs de données SatelliteDataProvider et LidarDataProvider
     - ✅ Optimisation des algorithmes d'extraction de métriques forestières
-
-### Objectifs en cours
-
-- 🔄 Prédiction de croissance forestière avec série temporelle
+- ✅ Prédiction de croissance forestière avec série temporelle
+    - ✅ Modèles de prédiction basés sur des séries temporelles (SARIMA, lissage exponentiel, Random Forest)
+    - ✅ Analyse des facteurs d'influence sur la croissance forestière
+    - ✅ Architecture modulaire et extensible pour les modèles prédictifs
+    - ✅ Génération de rapports d'analyse de croissance
+    - ✅ Intervalles de confiance pour les prédictions
 
 ### Objectifs planifiés
 
@@ -140,6 +142,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
 | SpeciesRecommender | 100% | Système complet avec base algorithmique, extension ML et analyse climatique ; modularisation et optimisation réalisées |
 | RemoteSensingModule | 100% | Module d'intégration des données de télédétection satellite et LIDAR complet et modulaire avec extraction de métriques forestières |
+| ForestGrowthPredictor | 100% | Module complet de prédiction de croissance forestière avec analyse des facteurs d'influence |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
@@ -152,7 +155,6 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
   - Interface utilisateur web basique
 
 - **Q3 2025**: Suite Phase 3
-  - Système de prédiction de croissance forestière
   - Tableau de bord de suivi forestier
 
 - **Q4 2025**: Transition vers Phase 4
@@ -167,12 +169,12 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 Les contributions au projet sont les bienvenues ! Voici les priorités actuelles :
 
-1. **Prédiction de croissance forestière** - Implémentation de modèles prédictifs temporels
-2. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
-3. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
-4. **Documentation** - Amélioration des guides d'utilisation et exemples
-5. **Visualisation** - Amélioration de la génération de cartes et rapports
-6. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
+1. **Interface utilisateur** - Développement d'une interface web basique utilisant l'API REST
+2. **Optimisation de performance** - Parallélisation des autres analyses (géospatiales, réglementaires)
+3. **Documentation** - Amélioration des guides d'utilisation et exemples
+4. **Visualisation** - Amélioration de la génération de cartes et rapports
+5. **Multilinguisme** - Support de langues supplémentaires dans les rapports et l'interface
+6. **Intégration IoT** - Préparation pour l'intégration avec des capteurs forestiers
 
 Pour contribuer, consultez le fichier [CONTRIBUTING.md](../CONTRIBUTING.md) pour les instructions et les bonnes pratiques.
 
