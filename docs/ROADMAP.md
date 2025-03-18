@@ -95,6 +95,11 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Architecture modulaire et extensible pour les modèles prédictifs
     - ✅ Génération de rapports d'analyse de croissance
     - ✅ Intervalles de confiance pour les prédictions
+    - ✅ Module de comparaison de scénarios climatiques
+    - ✅ Générateurs de rapport modulaires (markdown, HTML, PDF)
+    - ✅ Visualisations avancées des prédictions
+    - ✅ Système d'analyse des tendances et recommandations d'adaptation
+    - ✅ Exemple d'utilisation complet
 
 ### Objectifs planifiés
 
@@ -142,7 +147,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | ExploitantAgent | 100% | Implémentation complète comprenant : gestionnaire des opérateurs, gestionnaire des opérations, gestionnaire des performances + modèles de données |
 | SpeciesRecommender | 100% | Système complet avec base algorithmique, extension ML et analyse climatique ; modularisation et optimisation réalisées |
 | RemoteSensingModule | 100% | Module d'intégration des données de télédétection satellite et LIDAR complet et modulaire avec extraction de métriques forestières |
-| ForestGrowthPredictor | 100% | Module complet de prédiction de croissance forestière avec analyse des facteurs d'influence |
+| ForestGrowthPredictor | 100% | Module complet de prédiction de croissance forestière avec analyse des facteurs d'influence et génération de rapports modulaire |
 | API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
@@ -186,4 +191,4 @@ Le projet évolue selon trois principes directeurs :
 2. **APIs stables** - Les interfaces entre modules sont conçues pour minimiser les changements cassants
 3. **Évolution incrémentale** - Nouvelles fonctionnalités livrées progressivement en restant utilisables
 
-Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 17 Mars 2025.
+Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 18 Mars 2025.
