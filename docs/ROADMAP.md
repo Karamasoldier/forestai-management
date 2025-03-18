@@ -109,6 +109,10 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Pages de recherche et d'analyse de parcelles
     - ✅ Module de gestion des diagnostics
     - ✅ Module de recherche de subventions
+      - ✅ Liste des subventions disponibles avec filtrage avancé
+      - ✅ Vue détaillée des subventions avec composants modulaires
+      - ✅ Analyse d'éligibilité par parcelle
+      - ✅ Génération de dossiers de demande
     - ✅ Générateur de rapports
     - ✅ Visualisation géospatiale des parcelles
     - ✅ Interface de génération de diagnostics forestiers
@@ -146,7 +150,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | GeoAgent | 95% | Fonctionnalités principales + détection automatique zones prioritaires complètes |
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
-| SubsidyAgent | 80% | Structure principale et génération de documents complètes, intégration avancée réalisée |
+| SubsidyAgent | 100% | Structure principale et génération de documents complètes, intégration avancée réalisée, interface utilisateur complète |
 | DiagnosticAgent | 90% | Structure implémentée, intégration complète avec HealthAnalyzer et API REST |
 | ReportGenerator | 100% | Système de génération de rapports multiformat complet et modulaire |
 | HealthAnalyzer | 100% | Module d'analyse sanitaire forestière avec détection de problèmes, recommandations et intégration aux rapports |
@@ -156,10 +160,10 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | SpeciesRecommender | 100% | Système complet avec base algorithmique, extension ML et analyse climatique ; modularisation et optimisation réalisées |
 | RemoteSensingModule | 100% | Module d'intégration des données de télédétection satellite et LIDAR complet et modulaire avec extraction de métriques forestières |
 | ForestGrowthPredictor | 100% | Module complet de prédiction de croissance forestière avec analyse des facteurs d'influence et génération de rapports modulaire |
-| API REST | 95% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
+| API REST | 100% | Tous les endpoints implémentés, incluant DiagnosticAgent et HealthAnalyzer, documentation OpenAPI complète |
 | Cache | 100% | Système de cache multiniveau implémenté, avec stratégies de fraîcheur adaptatives |
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
-| Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
+| Documentation | 95% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
 | Optimisation | 90% | Parallélisation des analyses sanitaires et extraction de métriques LIDAR implémentées, optimisation du système de recommandation d'espèces réalisée |
 | Interface Web | 100% | Interface utilisateur web basique implémentée avec Vue.js, incluant toutes les fonctionnalités essentielles et composants modulaires |
 
