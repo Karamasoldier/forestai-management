@@ -46,9 +46,9 @@ Cette phase enrichit le système avec des agents supplémentaires et améliore l
 - ✅ Documentation de l'utilisation combinée des agents
 - ✅ Amélioration des métriques de potentiel forestier
 
-## Phase 3: Agents avancés (✅ Complété)
+## Phase 3: Agents avancés et Interface Utilisateur (✅ Complété)
 
-Cette phase se concentre sur le développement d'agents spécialisés plus avancés.
+Cette phase se concentre sur le développement d'agents spécialisés plus avancés et l'interface utilisateur web.
 
 ### Objectifs complétés
 
@@ -110,6 +110,8 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Module de gestion des diagnostics
     - ✅ Module de recherche de subventions
     - ✅ Générateur de rapports
+    - ✅ Visualisation géospatiale des parcelles
+    - ✅ Interface de génération de diagnostics forestiers
 
 ## Phase 4: Intelligence collective et automatisation (🔮 Vision future)
 
@@ -130,7 +132,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 
 ### Objectifs envisagés
 
-- 🔮 Interface utilisateur web complète
+- 🔮 Interface utilisateur web complète avec fonctionnalités avancées
 - 🔮 Application mobile pour diagnostics sur le terrain
 - 🔮 Marketplace d'extensions et modules spécialisés
 - 🔮 Adaptation internationale (réglementations, espèces, climats)
@@ -159,12 +161,13 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | Tests | 80% | Tests unitaires étendus, tests d'intégration de base pour tous les agents, tests de régression automatisés ajoutés |
 | Documentation | 90% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
 | Optimisation | 90% | Parallélisation des analyses sanitaires et extraction de métriques LIDAR implémentées, optimisation du système de recommandation d'espèces réalisée |
-| Interface Web | 100% | Interface utilisateur web basique implémentée avec Vue.js, incluant toutes les fonctionnalités essentielles |
+| Interface Web | 100% | Interface utilisateur web basique implémentée avec Vue.js, incluant toutes les fonctionnalités essentielles et composants modulaires |
 
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 3
   - Interface utilisateur web basique (✅ Complété)
+  - Composants modulaires et intégration API (✅ Complété)
 
 - **Q3 2025**: Transition vers Phase 4
   - Premiers modules d'orchestration autonome
@@ -194,4 +197,4 @@ Le projet évolue selon trois principes directeurs :
 2. **APIs stables** - Les interfaces entre modules sont conçues pour minimiser les changements cassants
 3. **Évolution incrémentale** - Nouvelles fonctionnalités livrées progressivement en restant utilisables
 
-Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 18 Mars 2025.
+Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 19 Mars 2025.
