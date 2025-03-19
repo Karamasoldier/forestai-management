@@ -1,0 +1,41 @@
+# Environnement virtuel
+venv/
+env/
+.env/
+
+# Fichiers de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+logs/
+*.log
+
+# Fichiers générés par npm
+node_modules/
+web/node_modules/
+webui/node_modules/
+npm-debug.log
+
+# Fichiers temporaires
+.DS_Store
+*.tmp
+*.swp
+.idea/
+.vscode/
+
+# Fichiers volumineux non nécessaires
+data/raw/
+data/processed/
+*.shp
+*.dbf
+*.shx
+
+# Builds et distributions
+dist/
+build/
+*.egg-info/
