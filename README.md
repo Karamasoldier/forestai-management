@@ -34,10 +34,27 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 - [Système de cache](docs/CACHE.md) - Documentation du système de cache pour l'optimisation des performances
 - [Guide de l'interface web](README_UPDATE.md) - Guide d'utilisation des interfaces web
 - [Correctifs pour erreurs de récursion](README_FIXES.md) - Documentation des correctifs pour les erreurs rencontrées avec l'interface web
+- [Déploiement Docker](docs/DOCKER.md) - Guide de déploiement avec Docker
 
 ## Installation et démarrage rapide
 
-### Installation automatisée
+### Option 1: Déploiement avec Docker (recommandé)
+
+La méthode la plus simple et fiable pour démarrer ForestAI:
+
+**Windows:**
+```
+run_docker.bat
+```
+
+**Linux/macOS:**
+```bash
+docker-compose up -d
+```
+
+Voir [la documentation Docker](docs/DOCKER.md) pour plus de détails.
+
+### Option 2: Installation automatisée classique
 
 ```bash
 # Cloner le projet
@@ -87,13 +104,13 @@ python run.py
 python run.py --agent geoagent
 
 # Rechercher des parcelles dans une commune spécifique
-python run.py --agent geoagent --action search_parcels --params '{"commune": "Saint-Martin-de-Crau", "section": "B"}'
+python run.py --agent geoagent --action search_parcels --params '{\"commune\": \"Saint-Martin-de-Crau\", \"section\": \"B\"}'
 
 # Vérifier la conformité réglementaire d'une parcelle
-python run.py --agent reglementation --action check_compliance --params '{"parcels": ["123456789"], "project_type": "boisement"}'
+python run.py --agent reglementation --action check_compliance --params '{\"parcels\": [\"123456789\"], \"project_type\": \"boisement\"}'
 
 # Rechercher des subventions pour un type de projet
-python run.py --agent subsidy --action search_subsidies --params '{"project_type": "reboisement", "region": "Occitanie"}'
+python run.py --agent subsidy --action search_subsidies --params '{\"project_type\": \"reboisement\", \"region\": \"Occitanie\"}'
 ```
 
 ### Mode API REST
