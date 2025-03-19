@@ -33,6 +33,7 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 - [API REST](docs/API.md) - Documentation de l'API REST
 - [Système de cache](docs/CACHE.md) - Documentation du système de cache pour l'optimisation des performances
 - [Guide de l'interface web](README_UPDATE.md) - Guide d'utilisation des interfaces web
+- [Correctifs pour erreurs de récursion](README_FIXES.md) - Documentation des correctifs pour les erreurs rencontrées avec l'interface web
 
 ## Installation et démarrage rapide
 
@@ -61,12 +62,19 @@ chmod +x run_web.sh
 
 # Démarrer l'interface web avec l'API
 ./run_web.sh
+
+# Version corrigée (en cas d'erreurs de récursion)
+chmod +x run_web_fix.sh
+./run_web_fix.sh
 ```
 
 **Windows**:
 ```bash
 # Démarrer l'interface web avec l'API
 run_web.bat
+
+# Version corrigée (en cas d'erreurs de récursion)
+run_web_fix.bat
 ```
 
 ### Mode ligne de commande classique
@@ -94,6 +102,9 @@ python run.py --agent subsidy --action search_subsidies --params '{"project_type
 # Démarrer le serveur API
 python api_server.py
 
+# Version corrigée (en cas d'erreurs de récursion)
+python api_server_fix.py
+
 # Accéder à la documentation interactive
 # Ouvrir http://localhost:8000/docs dans un navigateur
 
@@ -120,6 +131,8 @@ npm run serve
 ```
 
 Pour plus de détails, consultez le [guide complet de l'interface web](README_UPDATE.md).
+
+En cas de problèmes avec l'interface web, consultez la [documentation des correctifs](README_FIXES.md).
 
 ## Documentation des agents spécifiques
 
@@ -152,6 +165,10 @@ L'interface web et l'API utilisent l'authentification JWT. Utilisateurs disponib
 1. **Administrateur** : `admin / adminpassword`
 2. **Utilisateur** : `user / userpassword`
 3. **Diagnostic** : `diagnostic / diagnosticpassword`
+
+## Résolution des problèmes
+
+Si vous rencontrez des erreurs `RecursionError: maximum recursion depth exceeded` lors de l'utilisation de l'interface web ou de l'API, utilisez les versions corrigées des scripts de démarrage mentionnées ci-dessus. Pour plus d'informations, consultez la [documentation des correctifs](README_FIXES.md).
 
 ## Licence
 
