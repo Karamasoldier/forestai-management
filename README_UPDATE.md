@@ -1,90 +1,156 @@
-# Mise à jour du README principal
+# ForestAI - Guide de démarrage des interfaces web
 
-Cette mise à jour vise à intégrer les nouvelles fonctionnalités du SubsidyAgent dans le README principal du projet. Ces modifications devraient être fusionnées avec le README.md existant.
+Ce document fournit des instructions détaillées pour installer, configurer et tester les interfaces web du projet ForestAI.
 
-## Nouveaux modules et fonctionnalités
+## Prérequis
 
-### Agent de Subventions (SubsidyAgent)
+- Python 3.9+ 
+- Node.js 16+ et npm
+- Commandes Git standard
+- Un éditeur de code (VSCode recommandé)
 
-L'agent de subventions (SubsidyAgent) est désormais pleinement implémenté et intégré au projet ForestAI. Cet agent permet :
+## Installation automatisée
 
-- **Veille sur les aides disponibles** via différents scrapers spécialisés
-- **Analyse d'éligibilité** des projets aux différentes subventions
-- **Génération automatique de dossiers de demande** aux formats PDF, DOCX et HTML
-- **Stockage et mise à jour** des informations sur les subventions
-- **Recommandation de subventions** adaptées aux parcelles et projets spécifiques
+Le projet inclut maintenant un script d'installation simplifié qui configure automatiquement l'environnement :
 
-#### Architecture de l'agent de subventions
+```bash
+# Cloner le dépôt (si ce n'est pas déjà fait)
+git clone https://github.com/Karamasoldier/forestai-management.git
+cd forestai-management
 
-```
-forestai/agents/subsidy_agent/
-├── __init__.py                    # Point d'entrée du package
-├── subsidy_agent.py               # Implémentation principale de l'agent
-├── eligibility.py                 # Système d'analyse d'éligibilité
-├── scrapers/                      # Scrapers de subventions
-│   ├── __init__.py
-│   ├── base_scraper.py            # Classe de base pour tous les scrapers
-│   ├── france_relance_scraper.py  # Scraper pour les aides France Relance
-│   ├── europe_invest_scraper.py   # Scraper pour les aides européennes
-│   └── regional_scraper.py        # Scraper pour les aides régionales
-└── document_generation/           # Génération de documents
-    ├── __init__.py
-    ├── document_generator.py      # Coordinateur des générateurs
-    ├── pdf_generator.py           # Génération de PDF
-    ├── html_generator.py          # Génération de HTML
-    └── docx_generator.py          # Génération de DOCX
+# Créer l'environnement virtuel Python
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\\Scripts\\activate    # Windows
+
+# Exécuter le script d'installation
+python setup.py
 ```
 
-#### Intégration avec les autres agents
+Le script `setup.py` effectue automatiquement les actions suivantes :
+- Crée les répertoires de données nécessaires
+- Vérifie et crée les fichiers .env nécessaires
+- Installe les dépendances Python et JavaScript
 
-L'agent de subventions peut être utilisé conjointement avec le GeoAgent et le ReglementationAgent pour fournir une analyse complète des parcelles forestières :
+## Démarrage de l'application
 
-1. Le **GeoAgent** fournit les caractéristiques géographiques de la parcelle
-2. Le **ReglementationAgent** vérifie les contraintes légales et réglementaires
-3. Le **SubsidyAgent** identifie les subventions disponibles et évalue l'éligibilité
+ForestAI dispose désormais d'un script de démarrage unifié qui lance à la fois l'API backend et l'interface web :
 
-Un exemple d'intégration est disponible dans `examples/subsidy_geo_integration_example.py`.
+```bash
+# Avec l'environnement virtuel activé
+python start_web.py
+```
 
-## Nouveaux exemples
+Options disponibles :
+- `--api-only` : Démarre uniquement l'API
+- `--web-only` : Démarre uniquement l'interface web
+- `--web-type vue|vite` : Choisir l'interface (webui/ ou web/)
+- `--api-port XXXX` : Spécifier un port pour l'API (défaut: 8000)
+- `--reload` : Activer le rechargement automatique pour l'API
 
-De nouveaux exemples ont été ajoutés pour démontrer l'utilisation de l'agent de subventions :
+## Connexion et authentification
 
-- `examples/subsidy_agent_example.py` : Utilisation basique de l'agent de subventions
-- `examples/subsidy_eligibility_example.py` : Analyse d'éligibilité pour différents types de projets
-- `examples/document_generation_example.py` : Génération de dossiers de demande
-- `examples/subsidy_geo_integration_example.py` : Intégration avec le GeoAgent
+Pour tester l'interface, utilisez l'un des comptes suivants :
 
-## Nouvelle documentation
+1. **Administrateur**
+   - Nom d'utilisateur : `admin`
+   - Mot de passe : `adminpassword`
+   - Droits : Accès complet à toutes les fonctionnalités
 
-Une nouvelle documentation a été ajoutée pour détailler l'agent de subventions et son utilisation :
+2. **Utilisateur standard**
+   - Nom d'utilisateur : `user`
+   - Mot de passe : `userpassword`
+   - Droits : Accès en lecture aux données géographiques, subventions, diagnostics et réglementations
 
-- `docs/SubsidyAgent.md` : Documentation complète de l'agent de subventions
-- `docs/SubsidyDocGeneration.md` : Guide d'utilisation du système de génération de documents
+3. **Agent de diagnostic**
+   - Nom d'utilisateur : `diagnostic`
+   - Mot de passe : `diagnosticpassword`
+   - Droits : Accès aux fonctionnalités de diagnostic
 
-## État d'avancement du projet
+## Interfaces web disponibles
 
-La phase 3 a progressé avec l'implémentation complète de l'agent de subventions :
+Le projet propose deux interfaces web différentes :
 
-- [x] Implémentation du crawler de subventions
-- [x] Implémentation du système d'analyse d'éligibilité
-- [x] Implémentation du générateur de dossiers
-- [x] Intégration avec le GeoAgent
+### 1. Interface Vite.js (répertoire `web/`)
 
-## Prochaines étapes
+Interface moderne utilisant Vite.js et Vue 3 :
+- Architecture composants
+- UI basée sur Bootstrap 5
+- Intégration Leaflet pour la cartographie
+- Visualisations avec Chart.js
 
-Les prochaines étapes prioritaires sont :
+Pour la lancer individuellement :
+```bash
+cd web
+npm install
+npm run dev
+```
 
-1. **Amélioration de l'agent de subventions**
-   - [ ] Ajout de sources de subventions supplémentaires
-   - [ ] Amélioration de la précision de l'analyse d'éligibilité
-   - [ ] Intégration de données sur les aides dynamiques (API)
+### 2. Interface Vue CLI (répertoire `webui/`)
 
-2. **Développement du DiagnosticAgent**
-   - [ ] Système d'analyse forestière
-   - [ ] Intégration avec les données géospatiales et climatiques
-   - [ ] Génération de rapports de diagnostic
+Interface alternative utilisant Vue CLI :
+- Architecture modulaire avec Vuex et Vue Router
+- UI basée sur PrimeVue
+- Visualisations avec Chart.js et D3.js
 
-3. **Interface utilisateur**
-   - [ ] Conception des wireframes
-   - [ ] Implémentation du frontend FastAPI
-   - [ ] Tests d'acceptation utilisateur
+Pour la lancer individuellement :
+```bash
+cd webui
+npm install
+npm run serve
+```
+
+## Structure des API disponibles
+
+L'API REST est accessible à l'adresse `http://localhost:8000` et propose les endpoints suivants :
+
+- **Authentification** : `/auth/token` (POST) pour obtenir un token JWT
+- **GeoAgent** : 
+  - `/geo/search` (POST) : Recherche de parcelles
+  - `/geo/analyze` (POST) : Analyse d'une parcelle
+- **SubsidyAgent** : 
+  - `/subsidies/search` (POST) : Recherche de subventions
+  - `/subsidies/eligibility` (POST) : Analyse d'éligibilité
+  - `/subsidies/application` (POST) : Génération de dossier
+- **DiagnosticAgent** : 
+  - `/diagnostic/generate` (POST) : Génération de diagnostic
+  - `/diagnostic/management-plan` (POST) : Plan de gestion
+  - `/diagnostic/health-analysis` (POST) : Analyse sanitaire
+  - `/diagnostic/report` (POST) : Génération de rapport
+
+Documentation interactive disponible à l'adresse : `http://localhost:8000/docs`
+
+## Dépannage
+
+### Problèmes d'authentification
+- Vérifiez que le fichier `.env` contient la valeur `JWT_SECRET`
+- Assurez-vous que les appels API utilisent le bon format d'authentification (`Bearer TOKEN`)
+
+### L'API ne démarre pas
+- Vérifiez que toutes les dépendances sont installées : `pip install -r requirements.txt`
+- Vérifiez que le port 8000 n'est pas déjà utilisé
+
+### L'interface web ne se connecte pas à l'API
+- Vérifiez les fichiers `.env` dans les répertoires `web/` et `webui/`
+- Assurez-vous que l'API est bien démarrée et accessible
+- Vérifiez les erreurs CORS dans la console du navigateur
+
+## Développement
+
+Pour contribuer au développement des interfaces web :
+
+1. Les composants web dans `web/src/components` sont organisés par fonctionnalité
+2. Les services API dans `web/src/services` gèrent les appels HTTP
+3. Les stores dans `web/src/stores` gèrent l'état global de l'application
+
+Même principe pour le répertoire `webui/` avec une organisation légèrement différente.
+
+## Roadmap des interfaces
+
+- [x] Structure de base des interfaces
+- [x] Authentification JWT
+- [x] Intégration avec l'API GeoAgent
+- [ ] Intégration complète SubsidyAgent
+- [ ] Visualisations avancées des diagnostics
+- [ ] Interface de génération de rapports
+- [ ] Mode hors ligne et synchronisation
