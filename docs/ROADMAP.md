@@ -116,6 +116,11 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Générateur de rapports
     - ✅ Visualisation géospatiale des parcelles
     - ✅ Interface de génération de diagnostics forestiers
+- ✅ Conteneurisation Docker pour faciliter le déploiement
+    - ✅ Création d'un Dockerfile optimisé
+    - ✅ Configuration Docker Compose multi-environnement
+    - ✅ Documentation de déploiement Docker
+    - ✅ Scripts simplifiant l'utilisation Docker
 
 ## Phase 4: Intelligence collective et automatisation (🔮 Vision future)
 
@@ -146,7 +151,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 ## État d'avancement actuel
 
 | Module | Progression | Détails |
-|--------|-------------|---------|
+|--------|-------------|---------| 
 | GeoAgent | 95% | Fonctionnalités principales + détection automatique zones prioritaires complètes |
 | ReglementationAgent | 85% | Base réglementaire complète, mises à jour automatiques à finaliser |
 | ClimateAnalyzer | 75% | Intégration de données climatiques complète, modèles prédictifs en développement |
@@ -166,12 +171,14 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | Documentation | 95% | Documentation utilisateur et développeur complétée, incluant nouveaux composants et API |
 | Optimisation | 90% | Parallélisation des analyses sanitaires et extraction de métriques LIDAR implémentées, optimisation du système de recommandation d'espèces réalisée |
 | Interface Web | 100% | Interface utilisateur web basique implémentée avec Vue.js, incluant toutes les fonctionnalités essentielles et composants modulaires |
+| Conteneurisation Docker | 100% | Configuration Docker complète, documentation et scripts de déploiement ajoutés |
 
 ## Calendrier prévisionnel
 
 - **Q2 2025**: Finalisation Phase 3
   - Interface utilisateur web basique (✅ Complété)
   - Composants modulaires et intégration API (✅ Complété)
+  - Conteneurisation Docker (✅ Complété)
 
 - **Q3 2025**: Transition vers Phase 4
   - Premiers modules d'orchestration autonome
