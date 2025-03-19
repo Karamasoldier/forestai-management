@@ -32,26 +32,44 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 - [Plan d'exécution](docs/ROADMAP.md) - Roadmap, phases de développement et état d'avancement
 - [API REST](docs/API.md) - Documentation de l'API REST
 - [Système de cache](docs/CACHE.md) - Documentation du système de cache pour l'optimisation des performances
+- [Guide de l'interface web](README_UPDATE.md) - Guide d'utilisation des interfaces web
 
-## Guide rapide d'installation
+## Installation et démarrage rapide
+
+### Installation automatisée
 
 ```bash
-# Créer un environnement virtuel
+# Cloner le projet
+git clone https://github.com/Karamasoldier/forestai-management.git
+cd forestai-management
+
+# Créer l'environnement virtuel Python
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-venv\\Scripts\\activate     # Windows
+venv\\Scripts\\activate    # Windows
 
-# Installer les dépendances
-pip install -r requirements.txt
-
-# Configuration
-cp .env.example .env
-# Éditer .env avec vos clés API et chemins de données
+# Installation automatisée complète
+python setup.py
 ```
 
-## Utilisation rapide
+### Démarrage avec scripts unifiés
 
-### Mode ligne de commande
+**Linux/macOS**:
+```bash
+# Rendre le script exécutable
+chmod +x run_web.sh
+
+# Démarrer l'interface web avec l'API
+./run_web.sh
+```
+
+**Windows**:
+```bash
+# Démarrer l'interface web avec l'API
+run_web.bat
+```
+
+### Mode ligne de commande classique
 
 ```bash
 # Lancer le système complet
@@ -83,6 +101,26 @@ python api_server.py
 python examples/api_usage_example.py
 ```
 
+### Interface Web
+
+Le projet dispose de deux interfaces web :
+
+1. **Interface Vite.js** (répertoire `web/`):
+```bash
+cd web
+npm install
+npm run dev
+```
+
+2. **Interface Vue CLI** (répertoire `webui/`):
+```bash
+cd webui
+npm install
+npm run serve
+```
+
+Pour plus de détails, consultez le [guide complet de l'interface web](README_UPDATE.md).
+
 ## Documentation des agents spécifiques
 
 - [Agent de géotraitement (GeoAgent)](docs/GeoAgent.md)
@@ -106,6 +144,14 @@ def expensive_function(param):
 ```
 
 Pour une démonstration complète, voir [l'exemple d'utilisation du cache](examples/cache_usage_example.py).
+
+## Authentification et utilisateurs de test
+
+L'interface web et l'API utilisent l'authentification JWT. Utilisateurs disponibles pour les tests :
+
+1. **Administrateur** : `admin / adminpassword`
+2. **Utilisateur** : `user / userpassword`
+3. **Diagnostic** : `diagnostic / diagnosticpassword`
 
 ## Licence
 
