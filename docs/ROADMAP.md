@@ -121,6 +121,11 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Configuration Docker Compose multi-environnement
     - ✅ Documentation de déploiement Docker
     - ✅ Scripts simplifiant l'utilisation Docker
+- ✅ Résolution des problèmes de récursion dans l'API
+    - ✅ Correctifs pour les modèles Pydantic problématiques
+    - ✅ Outils de diagnostic et détection automatique
+    - ✅ Documentation des solutions et meilleures pratiques
+    - ✅ Tests de non-régression
 
 ## Phase 4: Intelligence collective et automatisation (🔮 Vision future)
 
@@ -172,6 +177,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | Optimisation | 90% | Parallélisation des analyses sanitaires et extraction de métriques LIDAR implémentées, optimisation du système de recommandation d'espèces réalisée |
 | Interface Web | 100% | Interface utilisateur web basique implémentée avec Vue.js, incluant toutes les fonctionnalités essentielles et composants modulaires |
 | Conteneurisation Docker | 100% | Configuration Docker complète, documentation et scripts de déploiement ajoutés |
+| Correctifs récursion | 100% | Solutions pour les problèmes de récursion dans les modèles Pydantic, outils de diagnostic automatisés |
 
 ## Calendrier prévisionnel
 
@@ -179,6 +185,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
   - Interface utilisateur web basique (✅ Complété)
   - Composants modulaires et intégration API (✅ Complété)
   - Conteneurisation Docker (✅ Complété)
+  - Correctifs pour les erreurs de récursion (✅ Complété)
 
 - **Q3 2025**: Transition vers Phase 4
   - Premiers modules d'orchestration autonome
@@ -208,4 +215,4 @@ Le projet évolue selon trois principes directeurs :
 2. **APIs stables** - Les interfaces entre modules sont conçues pour minimiser les changements cassants
 3. **Évolution incrémentale** - Nouvelles fonctionnalités livrées progressivement en restant utilisables
 
-Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 19 Mars 2025.
+Ce document est mis à jour régulièrement pour refléter l'évolution du projet. Dernière mise à jour: 20 Mars 2025.
