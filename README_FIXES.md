@@ -4,7 +4,7 @@ Ce document décrit les correctifs mis en place pour résoudre les erreurs de r�
 
 ## Problème identifié
 
-L'erreur `RecursionError: maximum recursion depth exceeded` se produit lors du démarrage de l'API REST, spécifiquement dans les modules Pydantic utilisés pour les modèles de données API. Le problème est lié aux méthodes `__repr_args__` et `display_as_type` qui entrent dans une boucle infinie à cause de références circulaires dans certains modèles de données.
+L'erreur `RecursionError: maximum recursion depth exceeded` se produit lors du démarrage de l'API REST, spécifiquement dans les modèles Pydantic utilisés pour les modèles de données API. Le problème est lié aux méthodes `__repr_args__` et `display_as_type` qui entrent dans une boucle infinie à cause de références circulaires dans certains modèles de données.
 
 ## Fichiers correctifs ajoutés
 
@@ -31,11 +31,39 @@ Plusieurs fichiers ont été ajoutés pour résoudre ce problème :
 6. **run_web_fix.bat**
    - Script batch pour démarrer l'interface web avec les correctifs (Windows)
 
+7. **scripts/debug_pydantic_models.py** (Nouveau)
+   - Script utilitaire pour diagnostiquer les références circulaires dans les modèles Pydantic
+   - Analyse profonde des modèles et leurs relations
+
+8. **test_models_fix.py** (Nouveau)
+   - Utilitaire de test pour vérifier que les correctifs fonctionnent correctement
+   - Teste la représentation et la sérialisation JSON des modèles
+   - Test spécifique des cas imbriqués complexes
+
+9. **fix_recursion_errors.py** (Nouveau)
+   - Script automatisé pour détecter et corriger les problèmes de récursion
+   - Peut fonctionner en mode vérification ou application
+   - Met à jour automatiquement `models_fix.py` avec les correctifs nécessaires
+
 ## Comment utiliser les correctifs
 
-Pour utiliser les versions corrigées et éviter les erreurs de récursion infinie, utilisez les scripts de démarrage alternatifs :
+Pour utiliser les versions corrigées et éviter les erreurs de récursion infinie, plusieurs méthodes sont disponibles :
 
-### Linux/macOS
+### Correctifs automatiques (recommandé)
+
+La méthode la plus simple pour résoudre les problèmes de récursion :
+
+```bash
+# Vérifier les modèles problématiques sans modifier les fichiers
+python fix_recursion_errors.py --check
+
+# Appliquer automatiquement les correctifs pour tous les modèles problématiques
+python fix_recursion_errors.py --apply
+```
+
+### Démarrage avec scripts corrigés
+
+#### Linux/macOS
 
 ```bash
 # Rendre le script exécutable
@@ -45,7 +73,7 @@ chmod +x run_web_fix.sh
 ./run_web_fix.sh
 ```
 
-### Windows
+#### Windows
 
 ```bash
 # Démarrer l'interface web avec l'API corrigée
@@ -84,10 +112,48 @@ Le correctif fonctionne en modifiant le comportement des modèles Pydantic probl
 
 Ces modifications permettent d'éviter la récursion infinie tout en maintenant le fonctionnement normal de l'API.
 
+## Diagnostic et tests
+
+Pour diagnostiquer des problèmes de récursion :
+
+```bash
+# Exécuter le script de diagnostic pour identifier les modèles problématiques
+python scripts/debug_pydantic_models.py
+
+# Tester les correctifs pour vérifier leur efficacité
+python test_models_fix.py
+```
+
+## Causes techniques spécifiques
+
+Les erreurs de récursion sont principalement dues à :
+
+1. **Références circulaires** : Des modèles qui se référencent mutuellement (directement ou indirectement)
+   - Exemple : `DiagnosticRequest` contient `InventoryData` qui contient `InventoryItem`
+
+2. **Auto-références dans la méthode `__repr__`** : La méthode standard de Pydantic pour afficher les instances de modèles tente d'inclure les représentations complètes de tous les sous-objets, créant ainsi des boucles infinies.
+
+3. **Problèmes similaires dans la sérialisation JSON** : Dans certains cas, la sérialisation peut également entrer dans des boucles infinies, bien que Pydantic tente d'éviter cela.
+
 ## Notes additionnelles
 
 - Ces correctifs ne modifient pas le comportement fonctionnel de l'API
 - Les données JSON envoyées et reçues restent les mêmes
 - Seule la manière dont les modèles sont représentés en interne (pour le débogage) est modifiée
 
-Si de nouvelles erreurs de récursion apparaissent, vous devrez peut-être ajouter d'autres modèles à la liste des modèles corrigés dans `forestai/api/models_fix.py`.
+Si de nouvelles erreurs de récursion apparaissent, utilisez `fix_recursion_errors.py --apply` pour mettre à jour automatiquement les correctifs.
+
+## Modèles corrigés
+
+Les correctifs s'appliquent notamment aux modèles suivants :
+
+- `InventoryItem`
+- `InventoryData`
+- `ProjectModel`
+- `ApplicantModel`
+- `ApplicationRequest`
+- `DiagnosticRequest`
+- `HealthAnalysisRequest`
+- `EligibilityRequest`
+
+Si d'autres modèles présentent des problèmes similaires, le script `fix_recursion_errors.py` les détectera et appliquera les correctifs nécessaires.
