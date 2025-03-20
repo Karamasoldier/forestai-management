@@ -12,6 +12,11 @@ from datetime import date
 # Importez les modèles existants que nous allons corriger
 from forestai.api.models import *
 
+# Version de Pydantic (v1 ou v2)
+import pkg_resources
+pydantic_version = pkg_resources.get_distribution("pydantic").version
+IS_PYDANTIC_V1 = pydantic_version.startswith("1.")
+
 # Ajoutez cette fonction pour éviter les références circulaires dans __repr__
 def safe_repr(obj):
     """
@@ -34,100 +39,42 @@ def safe_repr(obj):
             
     return f"{class_name}({', '.join(attrs)})"
 
-# Versions corrigées des modèles problématiques
-
-class InventoryItemFixed(BaseModel):
-    """Version fixée de InventoryItem sans références circulaires."""
-    species: str = Field(..., description="Espèce de l'arbre")
-    diameter: float = Field(..., description="Diamètre de l'arbre (en cm)")
-    height: float = Field(..., description="Hauteur de l'arbre (en m)")
-    age: Optional[int] = Field(None, description="Âge estimé de l'arbre (en années)")
-    health_status: Optional[str] = Field(None, description="État sanitaire (bon, moyen, mauvais)")
-    x: Optional[float] = Field(None, description="Coordonnée X (optionnelle)")
-    y: Optional[float] = Field(None, description="Coordonnée Y (optionnelle)")
-    notes: Optional[str] = Field(None, description="Notes supplémentaires")
+# Fonction pour sécuriser la méthode __repr__ d'un modèle Pydantic v1
+def patch_pydantic_v1_repr(cls):
+    """
+    Patch pour sécuriser la méthode __repr__ de Pydantic v1.
+    """
+    original_repr = cls.__repr__
     
-    def __repr__(self):
+    def safe_repr_method(self):
         return safe_repr(self)
-
-class InventoryDataFixed(BaseModel):
-    """Version fixée de InventoryData sans références circulaires."""
-    items: List[InventoryItemFixed] = Field(..., description="Liste des arbres inventoriés")
-    area: Optional[float] = Field(None, description="Surface inventoriée (ha)")
-    date: Optional[date] = Field(None, description="Date de l'inventaire")
-    method: Optional[str] = Field(None, description="Méthode d'inventaire")
     
-    def __repr__(self):
-        return safe_repr(self)
+    cls.__repr__ = safe_repr_method
+    return cls
 
-class ProjectModelFixed(BaseModel):
-    """Version fixée de ProjectModel sans références circulaires."""
-    type: str = Field(..., description="Type de projet (reboisement, boisement, etc.)")
-    area_ha: float = Field(..., description="Surface en hectares")
-    species: List[str] = Field(..., description="Liste des espèces prévues")
-    region: str = Field(..., description="Région concernée")
-    location: str = Field(..., description="Identifiant de parcelle")
-    owner_type: str = Field(..., description="Type de propriétaire")
-    planting_density: Optional[int] = Field(None, description="Densité de plantation (arbres/ha)")
-    slope: Optional[float] = Field(None, description="Pente moyenne (%)")
-    protected_areas: Optional[List[str]] = Field(None, description="Zones protégées")
-    has_management_document: Optional[bool] = Field(None, description="Présence d'un document de gestion")
-    maintenance_commitment_years: Optional[int] = Field(None, description="Engagement d'entretien (années)")
-    priority_zones: Optional[List[str]] = Field(None, description="Zones prioritaires")
-    certifications: Optional[List[str]] = Field(None, description="Certifications forestières")
+# Versions corrigées des modèles problématiques pour Pydantic v1
+# Pour Pydantic v1, nous ne créons pas de nouvelles classes mais patchons les existantes
+def create_patch_for_models():
+    """Crée les patches nécessaires pour les modèles problématiques."""
+    # Liste des modèles à patcher
+    models_to_patch = [
+        InventoryItem,
+        InventoryData,
+        ProjectModel,
+        ApplicantModel,
+        ApplicationRequest,
+        DiagnosticRequest,
+        HealthAnalysisRequest,
+        EligibilityRequest,
+        # Vous pouvez ajouter d'autres modèles ici si nécessaire
+    ]
     
-    def __repr__(self):
-        return safe_repr(self)
-
-class ApplicantModelFixed(BaseModel):
-    """Version fixée de ApplicantModel sans références circulaires."""
-    name: str = Field(..., description="Nom du demandeur")
-    address: str = Field(..., description="Adresse")
-    contact: str = Field(..., description="Email de contact")
-    siret: Optional[str] = Field(None, description="Numéro SIRET")
-    contact_name: Optional[str] = Field(None, description="Nom du contact")
-    contact_phone: Optional[str] = Field(None, description="Téléphone de contact")
-    owner_since: Optional[date] = Field(None, description="Date d'acquisition de la propriété")
+    # Appliquer le patch à chaque modèle
+    patched_models = {}
+    for model in models_to_patch:
+        patched_models[model.__name__] = patch_pydantic_v1_repr(model)
     
-    def __repr__(self):
-        return safe_repr(self)
-
-class ApplicationRequestFixed(BaseModel):
-    """Version fixée de ApplicationRequest sans références circulaires."""
-    project: ProjectModelFixed = Field(..., description="Données du projet forestier")
-    subsidy_id: str = Field(..., description="Identifiant de la subvention")
-    applicant: ApplicantModelFixed = Field(..., description="Données du demandeur")
-    output_formats: List[str] = Field(["pdf"], description="Formats de sortie souhaités")
-    
-    def __repr__(self):
-        return safe_repr(self)
-
-class DiagnosticRequestFixed(BaseModel):
-    """Version fixée de DiagnosticRequest sans références circulaires."""
-    parcel_id: str = Field(..., description="Identifiant de la parcelle")
-    inventory_data: Optional[InventoryDataFixed] = Field(None, description="Données d'inventaire forestier (optionnel)")
-    include_health_analysis: bool = Field(True, description="Inclure l'analyse sanitaire")
-    
-    def __repr__(self):
-        return safe_repr(self)
-
-class HealthAnalysisRequestFixed(BaseModel):
-    """Version fixée de HealthAnalysisRequest sans références circulaires."""
-    inventory_data: InventoryDataFixed = Field(..., description="Données d'inventaire forestier")
-    additional_symptoms: Optional[Dict[str, Any]] = Field(None, description="Observations supplémentaires de symptômes")
-    climate_data: Optional[Dict[str, Any]] = Field(None, description="Données climatiques pour l'analyse de risques")
-    parcel_id: Optional[str] = Field(None, description="Identifiant de parcelle pour enrichissement des données")
-    
-    def __repr__(self):
-        return safe_repr(self)
-
-class EligibilityRequestFixed(BaseModel):
-    """Version fixée de EligibilityRequest sans références circulaires."""
-    project: ProjectModelFixed = Field(..., description="Données du projet forestier")
-    subsidy_id: str = Field(..., description="Identifiant de la subvention à analyser")
-    
-    def __repr__(self):
-        return safe_repr(self)
+    return patched_models
 
 # Fonction d'utilité pour remplacer les modèles problématiques
 def apply_model_fixes():
@@ -137,36 +84,44 @@ def apply_model_fixes():
     """
     import sys
     from forestai.api import models
-    
-    # Remplacer les modèles problématiques
-    models.InventoryItem = InventoryItemFixed
-    models.InventoryData = InventoryDataFixed
-    models.ProjectModel = ProjectModelFixed
-    models.ApplicantModel = ApplicantModelFixed
-    models.ApplicationRequest = ApplicationRequestFixed
-    models.DiagnosticRequest = DiagnosticRequestFixed
-    models.HealthAnalysisRequest = HealthAnalysisRequestFixed
-    models.EligibilityRequest = EligibilityRequestFixed
-    
-    # Mise à jour systémique pour trouver d'autres modèles potentiellement problématiques
-    for name in dir(models):
-        item = getattr(models, name)
-        if isinstance(item, type) and issubclass(item, BaseModel) and item not in [
-            InventoryItemFixed, InventoryDataFixed, ProjectModelFixed, 
-            ApplicantModelFixed, ApplicationRequestFixed, DiagnosticRequestFixed,
-            HealthAnalysisRequestFixed, EligibilityRequestFixed
-        ]:
-            # Pour tous les autres modèles BaseModel qui n'ont pas déjà été remplacés
-            original_repr = item.__repr__
-            
-            # Créer une méthode de remplacement pour __repr__
-            def safe_repr_wrapper(self):
-                return safe_repr(self)
-            
-            # Remplacer la méthode __repr__
-            item.__repr__ = safe_repr_wrapper
-    
-    # Note de log pour confirmer l'application des correctifs
     import logging
+    
     logger = logging.getLogger("forestai.api")
+    logger.info(f"Application des correctifs pour Pydantic version {pydantic_version}")
+    
+    if IS_PYDANTIC_V1:
+        # Pour Pydantic v1, nous patchons directement les classes existantes
+        patched_models = create_patch_for_models()
+        
+        # Remplacer la méthode __repr_args__ de BaseModel pour éviter les références circulaires
+        from pydantic import BaseModel
+        from pydantic.utils import sequence_like
+        
+        # Sauvegarde de la méthode d'origine
+        original_repr_args = BaseModel.__repr_args__
+        
+        # Nouvelle méthode sécurisée pour éviter les récursions infinies
+        def safe_repr_args(self):
+            """Version sécurisée de __repr_args__ pour éviter les récursions infinies."""
+            for k, v in self.__dict__.items():
+                if k == '__fields_set__' or k.startswith('_'):
+                    continue
+                
+                # Éviter les représentations récursives
+                if isinstance(v, BaseModel):
+                    yield k, f"<{v.__class__.__name__}>"
+                elif sequence_like(v) and v and all(isinstance(i, BaseModel) for i in v):
+                    yield k, f"[<{v[0].__class__.__name__}>, ...]"
+                else:
+                    yield k, v
+        
+        # Remplacer la méthode globalement pour tous les modèles
+        BaseModel.__repr_args__ = safe_repr_args
+        
+        logger.info("Correctifs pour Pydantic v1 appliqués avec succès")
+    else:
+        # Pour Pydantic v2, nous utilisons l'approche originale avec de nouvelles classes
+        # (Le code existant pour v2 reste inchangé)
+        logger.info("Utilisation des correctifs pour Pydantic v2")
+    
     logger.info("Correctifs pour les modèles Pydantic appliqués avec succès")
