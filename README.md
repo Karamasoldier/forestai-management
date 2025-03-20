@@ -38,23 +38,37 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 
 ## Installation et démarrage rapide
 
-### Option 1: Déploiement avec Docker (recommandé)
+### Option 1: Script de démarrage unifié (recommandé)
 
-La méthode la plus simple et fiable pour démarrer ForestAI:
+La méthode la plus simple pour démarrer ForestAI avec correctifs intégrés:
 
-**Windows:**
-```
-run_docker.bat
-```
-
-**Linux/macOS:**
 ```bash
+# Démarrer l'API et l'interface web
+python run_forestai.py
+
+# Démarrer uniquement l'API
+python run_forestai.py --api-only
+
+# Démarrer uniquement l'interface web
+python run_forestai.py --web-only
+
+# Spécifier le port ou l'hôte de l'API
+python run_forestai.py --api-port 8080 --api-host 0.0.0.0
+```
+
+### Option 2: Déploiement avec Docker
+
+```bash
+# Windows
+run_docker.bat
+
+# Linux/macOS
 docker-compose up -d
 ```
 
 Voir [la documentation Docker](docs/DOCKER.md) pour plus de détails.
 
-### Option 2: Installation automatisée classique
+### Option 3: Installation automatisée classique
 
 ```bash
 # Cloner le projet
@@ -80,9 +94,9 @@ chmod +x run_web.sh
 # Démarrer l'interface web avec l'API
 ./run_web.sh
 
-# Version corrigée (en cas d'erreurs de récursion)
-chmod +x run_web_fix.sh
-./run_web_fix.sh
+# Résoudre les erreurs de récursion
+python fix_pydantic_v1_recursion.py
+python run_api_with_fix.py
 ```
 
 **Windows**:
@@ -90,8 +104,9 @@ chmod +x run_web_fix.sh
 # Démarrer l'interface web avec l'API
 run_web.bat
 
-# Version corrigée (en cas d'erreurs de récursion)
-run_web_fix.bat
+# Résoudre les erreurs de récursion
+python fix_pydantic_v1_recursion.py
+python run_api_with_fix.py
 ```
 
 ### Mode ligne de commande classique
@@ -116,11 +131,8 @@ python run.py --agent subsidy --action search_subsidies --params '{\"project_typ
 ### Mode API REST
 
 ```bash
-# Démarrer le serveur API
-python api_server.py
-
-# Version corrigée (en cas d'erreurs de récursion)
-python api_server_fix.py
+# Démarrer le serveur API (avec correctif anti-récursion)
+python run_api_with_fix.py
 
 # Accéder à la documentation interactive
 # Ouvrir http://localhost:8000/docs dans un navigateur
@@ -185,7 +197,18 @@ L'interface web et l'API utilisent l'authentification JWT. Utilisateurs disponib
 
 ## Résolution des problèmes
 
-Si vous rencontrez des erreurs `RecursionError: maximum recursion depth exceeded` lors de l'utilisation de l'interface web ou de l'API, utilisez les versions corrigées des scripts de démarrage mentionnées ci-dessus. Pour plus d'informations, consultez la [documentation des correctifs](README_FIXES.md).
+Si vous rencontrez des erreurs `RecursionError: maximum recursion depth exceeded` lors de l'utilisation de l'interface web ou de l'API, utilisez le script de démarrage unifié ou les correctifs spécifiques:
+
+```bash
+# Solution 1: Script de démarrage unifié
+python run_forestai.py
+
+# Solution 2: Correctif Pydantic v1
+python fix_pydantic_v1_recursion.py
+python run_api_with_fix.py
+```
+
+Pour plus d'informations, consultez la [documentation des correctifs](README_FIXES.md).
 
 ## Licence
 
