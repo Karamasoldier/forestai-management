@@ -122,10 +122,9 @@ Cette phase se concentre sur le développement d'agents spécialisés plus avanc
     - ✅ Documentation de déploiement Docker
     - ✅ Scripts simplifiant l'utilisation Docker
 - ✅ Résolution des problèmes de récursion dans l'API
-    - ✅ Correctifs pour les modèles Pydantic problématiques
-    - ✅ Outils de diagnostic et détection automatique
-    - ✅ Documentation des solutions et meilleures pratiques
-    - ✅ Tests de non-régression
+    - ✅ Correctifs pour Pydantic v1.x
+    - ✅ Script de démarrage unifié avec correctifs intégrés
+    - ✅ Documentation des solutions
 
 ## Phase 4: Intelligence collective et automatisation (🔮 Vision future)
 
@@ -177,7 +176,7 @@ Cette phase vise à étendre l'utilisation et l'écosystème de ForestAI.
 | Optimisation | 90% | Parallélisation des analyses sanitaires et extraction de métriques LIDAR implémentées, optimisation du système de recommandation d'espèces réalisée |
 | Interface Web | 100% | Interface utilisateur web basique implémentée avec Vue.js, incluant toutes les fonctionnalités essentielles et composants modulaires |
 | Conteneurisation Docker | 100% | Configuration Docker complète, documentation et scripts de déploiement ajoutés |
-| Correctifs récursion | 100% | Solutions pour les problèmes de récursion dans les modèles Pydantic, outils de diagnostic automatisés |
+| Correctifs récursion | 100% | Solutions pour les problèmes de récursion dans Pydantic v1.x, script de démarrage unifié |
 
 ## Calendrier prévisionnel
 
