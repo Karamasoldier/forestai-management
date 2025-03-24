@@ -33,6 +33,7 @@ Le projet est divisé en plusieurs documents pour faciliter la navigation :
 - [API REST](docs/API.md) - Documentation de l'API REST
 - [Système de cache](docs/CACHE.md) - Documentation du système de cache pour l'optimisation des performances
 - [Guide de l'interface web](README_UPDATE.md) - Guide d'utilisation des interfaces web
+- [Guide de l'interface desktop (PyQt6)](README_GUI.md) - Guide d'utilisation de l'interface desktop
 - [Correctifs pour erreurs de récursion](README_FIXES.md) - Documentation des correctifs pour les erreurs rencontrées avec l'interface web
 - [Déploiement Docker](docs/DOCKER.md) - Guide de déploiement avec Docker
 
@@ -119,13 +120,13 @@ python run.py
 python run.py --agent geoagent
 
 # Rechercher des parcelles dans une commune spécifique
-python run.py --agent geoagent --action search_parcels --params '{\"commune\": \"Saint-Martin-de-Crau\", \"section\": \"B\"}'
+python run.py --agent geoagent --action search_parcels --params '{"commune": "Saint-Martin-de-Crau", "section": "B"}'
 
 # Vérifier la conformité réglementaire d'une parcelle
-python run.py --agent reglementation --action check_compliance --params '{\"parcels\": [\"123456789\"], \"project_type\": \"boisement\"}'
+python run.py --agent reglementation --action check_compliance --params '{"parcels": ["123456789"], "project_type": "boisement"}'
 
 # Rechercher des subventions pour un type de projet
-python run.py --agent subsidy --action search_subsidies --params '{\"project_type\": \"reboisement\", \"region\": \"Occitanie\"}'
+python run.py --agent subsidy --action search_subsidies --params '{"project_type": "reboisement", "region": "Occitanie"}'
 ```
 
 ### Mode API REST
@@ -140,6 +141,40 @@ python run_api_with_fix.py
 # Exemples d'utilisation de l'API
 python examples/api_usage_example.py
 ```
+
+### Interface Desktop (PyQt6)
+
+Le projet inclut une interface graphique desktop basée sur PyQt6 pour tester et interagir avec les agents :
+
+```bash
+# Installation des dépendances de l'interface desktop
+pip install -r requirements-gui.txt
+
+# Démarrer l'interface desktop (mode API REST)
+python run_gui.py
+
+# Ou utiliser les scripts pratiques
+# Windows:
+run_gui.bat
+
+# Linux/macOS:
+chmod +x run_gui.sh
+./run_gui.sh
+```
+
+L'interface desktop peut fonctionner en deux modes:
+- **Mode API** : Communique avec les agents via l'API REST (nécessite que l'API soit démarrée)
+- **Mode direct** : Interagit directement avec les agents en local
+
+```bash
+# Mode direct (sans API REST)
+python run_gui.py --direct
+
+# Spécifier une URL d'API personnalisée
+python run_gui.py --api-url http://localhost:8080
+```
+
+Pour plus de détails, consultez le [guide complet de l'interface desktop](README_GUI.md).
 
 ### Interface Web
 
