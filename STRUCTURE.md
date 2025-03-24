@@ -49,6 +49,20 @@ forestai/
 │   ├── raw/                    # Données brutes
 │   ├── processed/              # Données traitées
 │   └── cache/                  # Cache temporaire
+├── gui/                        # Interface desktop (PyQt6)
+│   ├── __init__.py
+│   ├── main_window.py          # Fenêtre principale
+│   ├── components.py           # Composants d'interface
+│   ├── models.py               # Modèles de données
+│   └── agent_api.py            # API pour interagir avec les agents
+├── web/                        # Interface web Vite.js
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── webui/                      # Interface web Vue CLI
+│   ├── src/
+│   ├── public/
+│   └── package.json
 ├── ui/
 │   ├── templates/              # Templates web
 │   ├── static/                 # Fichiers statiques
@@ -63,8 +77,14 @@ forestai/
 │   └── ...
 ├── .env.example                # Exemple de variables d'environnement
 ├── requirements.txt            # Dépendances Python
+├── requirements-gui.txt        # Dépendances de l'interface PyQt6
 ├── run.py                      # Point d'entrée principal
-└── README.md                   # Documentation
+├── run_gui.py                  # Démarrage de l'interface desktop
+├── run_gui.bat                 # Script Windows pour l'interface desktop
+├── run_gui.sh                  # Script Linux/Mac pour l'interface desktop
+├── README.md                   # Documentation principale
+├── README_GUI.md               # Documentation de l'interface desktop
+└── README_UPDATE.md            # Documentation des interfaces web
 ```
 
 ## Composants principaux
@@ -78,8 +98,20 @@ Contient les fonctionnalités partagées comme la configuration, la base de donn
 ### Data
 Structure de dossiers pour les différents types de données manipulées par le système.
 
-### UI
-Interface utilisateur web pour interagir avec le système.
+### Interfaces
+Le système propose plusieurs interfaces pour interagir avec les agents :
+
+#### GUI - Interface desktop (PyQt6)
+Interface graphique desktop utilisant PyQt6 pour tester et surveiller les agents. Cette interface peut fonctionner en mode direct ou en communiquant avec l'API REST.
+
+#### Web - Interface web Vite.js
+Interface web moderne basée sur Vite.js et Vue.js pour une utilisation en production.
+
+#### WebUI - Interface web Vue CLI
+Interface web alternative basée sur Vue CLI pour les développeurs préférant cet écosystème.
+
+#### UI - Interface web traditionnelle
+Interface web traditionnelle utilisant des templates HTML pour une compatibilité maximale.
 
 ### Tests
 Tests unitaires et d'intégration pour chaque composant du système.
